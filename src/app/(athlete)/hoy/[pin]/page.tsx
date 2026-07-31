@@ -11,6 +11,14 @@ import {
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { AthleteHome } from "@/components/athlete-home";
+import {
+  fechaInicioSemana,
+  semanaDelMes,
+  esSemanaActual,
+  etiquetaChipSemana,
+  encabezadoSemana,
+} from "@/lib/calendario";
+import { normalizarNombre, capitalizarNombre } from "@/lib/nombres";
 
 type LogHistorico = {
   dayId: string;
@@ -75,19 +83,20 @@ export default async function HoyPage({
     .innerJoin(programs, eq(weeks.programId, programs.id))
     .where(eq(programs.athleteId, atleta.id));
 
-  // Última sesión (día) de un ejercicio por nombre, excluyendo el día actual.
-  // Los ejercicios se asocian por nombre: si el coach cambia el nombre,
-  // se pierde el vínculo (comportamiento aceptado en el MVP).
+  // Última sesión (día) de un ejercicio, excluyendo el día actual.
+  // Los ejercicios se asocian por nombre normalizado (sin mayúsculas ni
+  // espacios extra): "SENTADILLA", "Sentadilla" y "sentadilla " son lo mismo.
   function ultimaVezDe(
     nombreEjercicio: string,
     dayIdActual: string
   ): { series: number; reps: number; peso: number | null } | null {
+    const objetivo = normalizarNombre(nombreEjercicio);
     const porDia = new Map<string, LogHistorico[]>();
     for (const l of logsHistoricos) {
       if (
         l.peso == null ||
         l.fecha == null ||
-        l.ejercicio !== nombreEjercicio ||
+        normalizarNombre(l.ejercicio) !== objetivo ||
         l.dayId === dayIdActual
       ) {
         continue;
@@ -123,15 +132,22 @@ export default async function HoyPage({
       : null;
   }
 
-  const dias = (programaActivo?.weeks ?? []).flatMap((semana) =>
-    semana.days.map((dia) => ({
+  const semanasPrograma = programaActivo?.weeks ?? [];
+  const fechaInicioPrograma = programaActivo?.fechaInicio ?? null;
+  const dias = semanasPrograma.flatMap((semana) => {
+    const fechaSemana = fechaInicioSemana(fechaInicioPrograma, semana.numero);
+    return semana.days.map((dia) => ({
       id: dia.id,
       nombre: dia.nombre,
       semanaNumero: semana.numero,
+      semanaDelMes: semanaDelMes(fechaSemana),
+      esSemanaActual: esSemanaActual(fechaSemana),
+      chipSemana: etiquetaChipSemana(fechaSemana),
+      encabezadoSemana: encabezadoSemana(fechaSemana),
       completado: dia.completions.length > 0,
       exercises: dia.exercises.map((ex) => ({
         id: ex.id,
-        nombre: ex.nombre,
+        nombre: capitalizarNombre(ex.nombre),
         descanso: ex.descanso,
         observaciones: ex.observaciones,
         ultimaVez: ultimaVezDe(ex.nombre, dia.id),
@@ -151,8 +167,8 @@ export default async function HoyPage({
           })),
         })),
       })),
-    }))
-  );
+    }));
+  });
 
   return (
     <AthleteHome nombre={atleta.nombre} pin={pin} diasIniciales={dias} />

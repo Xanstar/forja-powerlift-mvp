@@ -10,6 +10,10 @@ export type DiaAtleta = {
   id: string;
   nombre: string;
   semanaNumero: number;
+  semanaDelMes: number;
+  esSemanaActual: boolean;
+  chipSemana: string;
+  encabezadoSemana: string;
   completado: boolean;
   exercises: {
     id: string;
@@ -107,7 +111,9 @@ export function AthleteHome({
                       "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
                       seleccionado === dia.id
                         ? "border-accent bg-accent text-white"
-                        : "border-border bg-surface text-chalk-muted hover:text-chalk"
+                        : dia.esSemanaActual
+                          ? "border-accent/50 bg-surface text-chalk hover:border-accent"
+                          : "border-border bg-surface text-chalk-muted hover:text-chalk"
                     )}
                   >
                     {dia.completado ? (
@@ -120,7 +126,7 @@ export function AthleteHome({
                         )}
                       />
                     )}
-                    Sem {dia.semanaNumero} · {dia.nombre}
+                    {dia.chipSemana} · {dia.nombre}
                   </button>
                 ))}
               </div>
@@ -133,7 +139,8 @@ export function AthleteHome({
             {diaActual ? (
               <WorkoutView
                 dia={diaActual}
-                semanaNumero={diaActual.semanaNumero}
+                encabezadoSemana={diaActual.encabezadoSemana}
+                esSemanaActual={diaActual.esSemanaActual}
                 pin={pin}
                 completado={diaActual.completado}
                 onCompletado={() => marcarCompletado(diaActual.id)}

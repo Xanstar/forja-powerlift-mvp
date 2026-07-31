@@ -71,15 +71,45 @@ function formatearTiempo(seg: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+// Compara lo hecho contra lo planeado. En sets de %RM el peso del plan no es
+// comparable con kg reales, así que ahí solo se comparan reps y RPE.
+function compararConPlan(
+  set: SetPlan,
+  pesoReal: number | null,
+  repsReal: number | null,
+  rpeReal: number | null
+): {
+  difiere: boolean;
+  peso: boolean;
+  reps: boolean;
+  rpe: boolean;
+} {
+  const pesoPlan = set.pesoTipo === "absoluto" ? set.pesoKg : null;
+  const difierePeso =
+    pesoReal != null && pesoPlan != null && pesoReal !== pesoPlan;
+  const difiereReps =
+    repsReal != null && repsReal !== set.repeticionesObjetivo;
+  const difiereRpe =
+    rpeReal != null && set.rpeObjetivo != null && rpeReal !== set.rpeObjetivo;
+  return {
+    difiere: difierePeso || difiereReps || difiereRpe,
+    peso: difierePeso,
+    reps: difiereReps,
+    rpe: difiereRpe,
+  };
+}
+
 export function WorkoutView({
   dia,
-  semanaNumero,
+  encabezadoSemana,
+  esSemanaActual,
   pin,
   completado = false,
   onCompletado,
 }: {
   dia: Dia;
-  semanaNumero: number;
+  encabezadoSemana: string;
+  esSemanaActual: boolean;
   pin: string;
   completado?: boolean;
   onCompletado?: () => void;
@@ -189,9 +219,16 @@ export function WorkoutView({
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-chalk-muted">
-            Semana {semanaNumero}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs uppercase tracking-wide text-chalk-muted">
+              {encabezadoSemana}
+            </p>
+            {esSemanaActual && (
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
+                Estás acá
+              </span>
+            )}
+          </div>
           <h1 className="font-display text-xl font-bold text-chalk">
             {dia.nombre}
           </h1>
@@ -351,6 +388,23 @@ function SetRow({
 
   const log = set.logs[0];
 
+  const hechoPeso = peso ? parseFloat(peso) : null;
+  const hechoReps = reps ? parseInt(reps, 10) : null;
+  const hechoRpe = rpe ? parseFloat(rpe) : null;
+  const diff = compararConPlan(set, hechoPeso, hechoReps, hechoRpe);
+
+  const detallePlan = diff.difiere
+    ? [
+        diff.peso && set.pesoKg != null ? `plan ${set.pesoKg}kg` : "",
+        diff.reps ? `plan ${set.repeticionesObjetivo} reps` : "",
+        diff.rpe && set.rpeObjetivo != null
+          ? `plan RPE ${set.rpeObjetivo}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : null;
+
   async function guardar() {
     const data = {
       pesoKgReal: peso ? parseFloat(peso) : undefined,
@@ -397,6 +451,14 @@ function SetRow({
               {log.pesoKgReal}kg × {log.repeticionesReales}
               {log.rpeReal ? ` @ RPE ${log.rpeReal}` : ""}
             </span>
+            {compararConPlan(
+              set,
+              log.pesoKgReal,
+              log.repeticionesReales,
+              log.rpeReal
+            ).difiere && (
+              <span className="text-accent"> · distinto del plan</span>
+            )}
           </p>
         )}
       </div>
@@ -410,7 +472,9 @@ function SetRow({
       className={cn(
         "rounded-lg border px-3 py-2.5 transition-all",
         guardado
-          ? "border-success/25 bg-background opacity-60"
+          ? diff.difiere
+            ? "border-accent/30 bg-background"
+            : "border-success/25 bg-background opacity-60"
           : "border-border bg-background"
       )}
     >
@@ -501,6 +565,18 @@ function SetRow({
             </p>
           )}
         </div>
+      )}
+
+      {guardado && !abierto && diff.difiere && (
+        <p className="mt-2 pl-[52px] text-xs">
+          <span className="text-chalk-muted">Hecho: </span>
+          <span className="font-medium text-accent">
+            {hechoPeso != null ? `${hechoPeso}kg` : "—"} ×{" "}
+            {hechoReps != null ? hechoReps : "—"}
+            {hechoRpe != null ? ` @ RPE ${hechoRpe}` : ""}
+          </span>
+          <span className="text-chalk-muted"> · {detallePlan}</span>
+        </p>
       )}
     </div>
   );

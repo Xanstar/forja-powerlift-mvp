@@ -37,6 +37,13 @@ Abrí `http://localhost:3000`.
   automático al completar una serie (barra fija con cuenta regresiva y vibración), "última vez"
   con la sesión anterior por ejercicio, auto-scroll a la próxima serie pendiente y
   navegación por días con fade lateral
+- **Ejercicios normalizados**: los nombres se guardan y comparan sin importar mayúsculas/espacios
+  ("SENTADILLA" y "Sentadilla" son el mismo ejercicio para "última vez" e historial)
+- **Libreta plan vs. hecho**: cuando el atleta entrena más pesado/liviano que lo planeado,
+  la serie se resalta y muestra "Hecho: 50kg × 6 @ RPE 7 · plan 47kg · plan 5 reps"
+- **Calendario**: la vista del atleta muestra la semana dentro del mes (1-4) con el día/mes real
+  ("Sem 4 · 27 jul", "Semana 4 de julio · Estás acá") en vez de la semana global del programa;
+  cada programa nuevo arranca desde el lunes que elija el entrenador
 
 ## Decisiones de arquitectura (por qué)
 

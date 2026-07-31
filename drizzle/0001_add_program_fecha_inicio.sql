@@ -1,0 +1,1 @@
+ALTER TABLE `programs` ADD `fecha_inicio` integer;

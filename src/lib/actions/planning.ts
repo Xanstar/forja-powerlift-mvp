@@ -12,8 +12,13 @@ import {
 } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { capitalizarNombre } from "@/lib/nombres";
 
-export async function crearPrograma(athleteId: string, nombre: string) {
+export async function crearPrograma(
+  athleteId: string,
+  nombre: string,
+  fechaInicio?: Date
+) {
   // Desactiva programas anteriores: en el MVP solo hay un programa activo por vez
   await db
     .update(programs)
@@ -22,7 +27,7 @@ export async function crearPrograma(athleteId: string, nombre: string) {
 
   const [p] = await db
     .insert(programs)
-    .values({ athleteId, nombre })
+    .values({ athleteId, nombre, fechaInicio })
     .returning();
 
   revalidatePath(`/atletas/${athleteId}`);
@@ -75,7 +80,8 @@ export async function crearEjercicio(
     .insert(exercises)
     .values({
       dayId,
-      nombre,
+      // Normalizado para que "SENTADILLA" y "Sentadilla" sean el mismo ejercicio
+      nombre: capitalizarNombre(nombre),
       orden: existentes.length,
       descanso: descanso || null,
       observaciones: observaciones || null,

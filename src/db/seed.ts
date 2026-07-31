@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { db } from "./index";
+import { inicioDeSemana } from "../lib/calendario";
 import {
   coaches,
   athletes,
@@ -52,7 +53,11 @@ async function main() {
 
   const [program] = await db
     .insert(programs)
-    .values({ athleteId: martina.id, nombre: "Bloque de fuerza - Julio" })
+    .values({
+      athleteId: martina.id,
+      nombre: "Bloque de fuerza - Julio",
+      fechaInicio: inicioDeSemana(new Date()),
+    })
     .returning();
 
   const [week] = await db

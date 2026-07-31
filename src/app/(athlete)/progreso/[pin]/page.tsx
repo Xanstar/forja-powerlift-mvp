@@ -8,6 +8,7 @@ import { EvolutionChart } from "@/components/evolution-chart";
 import { Card } from "@/components/ui/card";
 import { ultimosRecords } from "@/lib/actions/records";
 import { puntajeWilks, puntajeIpfGl, totalDesdeRecords } from "@/lib/scoring";
+import { normalizarNombre, capitalizarNombre } from "@/lib/nombres";
 
 const NOMBRES_LIFT: Record<string, string> = {
   sentadilla: "Sentadilla",
@@ -41,21 +42,33 @@ export default async function ProgresoPage({
     .innerJoin(programs, eq(weeks.programId, programs.id))
     .where(eq(programs.athleteId, atleta.id));
 
-  const porEjercicio = new Map<string, { fecha: string; peso: number }[]>();
+  const porEjercicio = new Map<
+    string,
+    { nombre: string; puntos: { fecha: string; peso: number }[] }
+  >();
   for (const r of rows) {
     if (!r.pesoReal || !r.fecha) continue;
-    const arr = porEjercicio.get(r.ejercicio) ?? [];
-    arr.push({
+    // Agrupa por nombre normalizado: "SENTADILLA" y "Sentadilla" son lo mismo.
+    const clave = normalizarNombre(r.ejercicio);
+    const e =
+      porEjercicio.get(clave) ?? {
+        nombre: capitalizarNombre(r.ejercicio),
+        puntos: [],
+      };
+    e.puntos.push({
       fecha: new Date(r.fecha).toLocaleDateString("es-AR", {
         day: "2-digit",
         month: "short",
       }),
       peso: r.pesoReal,
     });
-    porEjercicio.set(r.ejercicio, arr);
+    porEjercicio.set(clave, e);
   }
 
-  const ejerciciosConDatos = Array.from(porEjercicio.entries());
+  const ejerciciosConDatos = Array.from(porEjercicio.values()).map((e) => [
+    e.nombre,
+    e.puntos,
+  ] as const);
 
   const records = await ultimosRecords(atleta.id);
   const lifts = ["sentadilla", "banca", "peso_muerto"] as const;
