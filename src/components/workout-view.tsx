@@ -101,15 +101,13 @@ function compararConPlan(
 
 export function WorkoutView({
   dia,
-  encabezadoSemana,
-  esSemanaActual,
+  etiquetaSemana,
   pin,
   completado = false,
   onCompletado,
 }: {
   dia: Dia;
-  encabezadoSemana: string;
-  esSemanaActual: boolean;
+  etiquetaSemana: string;
   pin: string;
   completado?: boolean;
   onCompletado?: () => void;
@@ -219,16 +217,9 @@ export function WorkoutView({
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <p className="text-xs uppercase tracking-wide text-chalk-muted">
-              {encabezadoSemana}
-            </p>
-            {esSemanaActual && (
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
-                Estás acá
-              </span>
-            )}
-          </div>
+          <p className="text-xs uppercase tracking-wide text-chalk-muted">
+            {etiquetaSemana}
+          </p>
           <h1 className="font-display text-xl font-bold text-chalk">
             {dia.nombre}
           </h1>

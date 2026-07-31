@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, ChevronDown } from "lucide-react";
 import {
-  crearSemana,
   crearDia,
   crearEjercicio,
   crearSet,
   eliminarEjercicio,
   eliminarDia,
 } from "@/lib/actions/planning";
+import { fechaInicioSemana, rangoSemana } from "@/lib/calendario";
 import { cn } from "@/lib/utils";
 
 type SetPlan = {
@@ -46,15 +46,15 @@ type Semana = {
 
 export function PlanBuilder({
   athleteId,
-  programId,
   semanas,
+  semanasTotal,
+  fechaInicio,
 }: {
   athleteId: string;
-  programId: string;
   semanas: Semana[];
+  semanasTotal: number;
+  fechaInicio: Date | null;
 }) {
-  const [, startTransition] = useTransition();
-
   return (
     <div className="space-y-4">
       {semanas.map((semana) => (
@@ -62,20 +62,10 @@ export function PlanBuilder({
           key={semana.id}
           athleteId={athleteId}
           semana={semana}
+          semanasTotal={semanasTotal}
+          fechaInicio={fechaInicio}
         />
       ))}
-
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() =>
-          startTransition(() => {
-            crearSemana(programId, athleteId);
-          })
-        }
-      >
-        <Plus size={14} /> Agregar semana
-      </Button>
     </div>
   );
 }
@@ -83,13 +73,19 @@ export function PlanBuilder({
 function SemanaBlock({
   athleteId,
   semana,
+  semanasTotal,
+  fechaInicio,
 }: {
   athleteId: string;
   semana: Semana;
+  semanasTotal: number;
+  fechaInicio: Date | null;
 }) {
   const [open, setOpen] = useState(true);
   const [nombreDia, setNombreDia] = useState("");
   const [, startTransition] = useTransition();
+
+  const rango = rangoSemana(fechaInicioSemana(fechaInicio, semana.numero));
 
   return (
     <div className="rounded-xl border border-border bg-surface">
@@ -98,7 +94,10 @@ function SemanaBlock({
         className="flex w-full items-center justify-between px-5 py-3.5"
       >
         <span className="font-display text-sm font-semibold text-chalk">
-          Semana {semana.numero}
+          Semana {semana.numero}{" "}
+          <span className="font-normal text-chalk-muted">
+            de {semanasTotal} · {rango}
+          </span>
         </span>
         <ChevronDown
           size={16}
@@ -127,7 +126,7 @@ function SemanaBlock({
             className="flex gap-2"
           >
             <Input
-              placeholder="Nombre del día (ej. Día A)"
+              placeholder="Nombre del día (ej. Día 1)"
               value={nombreDia}
               onChange={(e) => setNombreDia(e.target.value)}
               className="max-w-xs"

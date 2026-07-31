@@ -17,6 +17,7 @@ import { capitalizarNombre } from "@/lib/nombres";
 export async function crearPrograma(
   athleteId: string,
   nombre: string,
+  semanas = 4,
   fechaInicio?: Date
 ) {
   // Desactiva programas anteriores: en el MVP solo hay un programa activo por vez
@@ -27,24 +28,20 @@ export async function crearPrograma(
 
   const [p] = await db
     .insert(programs)
-    .values({ athleteId, nombre, fechaInicio })
+    .values({ athleteId, nombre, semanas, fechaInicio })
     .returning();
+
+  // Las semanas se crean con el programa: la duración es finita (1..semanas),
+  // el entrenador arma los días dentro de cada semana.
+  await db.insert(weeks).values(
+    Array.from({ length: semanas }).map((_, i) => ({
+      programId: p.id,
+      numero: i + 1,
+    }))
+  );
 
   revalidatePath(`/atletas/${athleteId}`);
   return p;
-}
-
-export async function crearSemana(programId: string, athleteId: string) {
-  const existentes = await db.query.weeks.findMany({
-    where: eq(weeks.programId, programId),
-  });
-  const [w] = await db
-    .insert(weeks)
-    .values({ programId, numero: existentes.length + 1 })
-    .returning();
-
-  revalidatePath(`/atletas/${athleteId}`);
-  return w;
 }
 
 export async function crearDia(

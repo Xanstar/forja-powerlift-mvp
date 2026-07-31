@@ -15,6 +15,13 @@
       "when": 1785481370895,
       "tag": "0001_add_program_fecha_inicio",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785484634866,
+      "tag": "0002_add_program_semanas",
+      "breakpoints": true
     }
   ]
 }

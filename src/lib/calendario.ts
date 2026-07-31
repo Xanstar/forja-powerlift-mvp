@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 const DIAS_SEMANA = 7 * 24 * 60 * 60 * 1000;
+const UN_DIA = 24 * 60 * 60 * 1000;
 
 // Lunes de la semana que contiene a `fecha` (0:00h).
 export function inicioDeSemana(fecha: Date): Date {
@@ -25,41 +26,24 @@ export function fechaInicioSemana(
   return new Date(base.getTime() + (numeroSemana - 1) * DIAS_SEMANA);
 }
 
-// Posición de la semana dentro del mes calendario (1-5):
-// la del lunes 16/3 es la semana 3 del mes, la del lunes 2/2 es la 1.
-export function semanaDelMes(fecha: Date): number {
-  return Math.ceil(fecha.getDate() / 7);
-}
-
 // Mes corto en español, sin punto ("mar", "abr").
 export function mesCorto(fecha: Date): string {
   return format(fecha, "MMM", { locale: es }).replace(".", "");
-}
-
-export function mesLargo(fecha: Date): string {
-  return format(fecha, "MMMM", { locale: es });
 }
 
 export function diaDelMes(fecha: Date): number {
   return fecha.getDate();
 }
 
-export function anio(fecha: Date): number {
-  return fecha.getFullYear();
+// Rango de la semana del programa: "27 jul – 2 ago" (lunes a domingo).
+export function rangoSemana(fechaInicio: Date): string {
+  const fin = new Date(fechaInicio.getTime() + 6 * UN_DIA);
+  return `${diaDelMes(fechaInicio)} ${mesCorto(fechaInicio)} – ${diaDelMes(
+    fin
+  )} ${mesCorto(fin)}`;
 }
 
-export function esSemanaActual(fecha: Date): boolean {
-  return inicioDeSemana(fecha).getTime() === inicioDeSemana(new Date()).getTime();
-}
-
-// "Sem 2 · 16 mar" para el chip del día.
-export function etiquetaChipSemana(fecha: Date): string {
-  return `Sem ${semanaDelMes(fecha)} · ${diaDelMes(fecha)} ${mesCorto(fecha)}`;
-}
-
-// "Semana 2 de marzo · 16 mar" para el encabezado del entrenamiento.
-export function encabezadoSemana(fecha: Date): string {
-  return `Semana ${semanaDelMes(fecha)} de ${mesLargo(fecha)} · ${diaDelMes(
-    fecha
-  )} ${mesCorto(fecha)}`;
+// "Semana 2 · 3 ago – 9 ago" para encabezados y navegación del plan.
+export function etiquetaSemana(numero: number, fechaInicio: Date): string {
+  return `Semana ${numero} · ${rangoSemana(fechaInicio)}`;
 }

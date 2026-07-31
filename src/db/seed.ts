@@ -57,22 +57,29 @@ async function main() {
       athleteId: martina.id,
       nombre: "Bloque de fuerza - Julio",
       fechaInicio: inicioDeSemana(new Date()),
+      semanas: 4,
     })
     .returning();
 
-  const [week] = await db
+  const semanas = await db
     .insert(weeks)
-    .values({ programId: program.id, numero: 1 })
+    .values(
+      Array.from({ length: 4 }).map((_, i) => ({
+        programId: program.id,
+        numero: i + 1,
+      }))
+    )
     .returning();
+  const week = semanas[0];
 
-  const [dayA] = await db
+  const [day1] = await db
     .insert(days)
-    .values({ weekId: week.id, nombre: "Día A", orden: 0 })
+    .values({ weekId: week.id, nombre: "Día 1", orden: 0 })
     .returning();
 
   const [squat] = await db
     .insert(exercises)
-    .values({ dayId: dayA.id, nombre: "Sentadilla", orden: 0, descanso: "3 min" })
+    .values({ dayId: day1.id, nombre: "Sentadilla", orden: 0, descanso: "3 min" })
     .returning();
 
   const squatSets = await db
@@ -100,19 +107,19 @@ async function main() {
     }))
   );
   await db.insert(dayCompletions).values({
-    dayId: dayA.id,
+    dayId: day1.id,
     completadoEn: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
   });
 
-  // Día B queda pendiente, para probar la vista del atleta por PIN.
-  const [dayB] = await db
+  // Día 2 queda pendiente, para probar la vista del atleta por PIN.
+  const [day2] = await db
     .insert(days)
-    .values({ weekId: week.id, nombre: "Día B", orden: 1 })
+    .values({ weekId: week.id, nombre: "Día 2", orden: 1 })
     .returning();
 
   const [bench] = await db
     .insert(exercises)
-    .values({ dayId: dayB.id, nombre: "Press Banca", orden: 0, descanso: "2 min" })
+    .values({ dayId: day2.id, nombre: "Press Banca", orden: 0, descanso: "2 min" })
     .returning();
 
   await db.insert(plannedSets).values(
@@ -129,7 +136,7 @@ async function main() {
   console.log("✓ Datos de demo cargados.\n");
   console.log(`  Login del entrenador: ${emailAdmin} / ${passwordAdmin}`);
   console.log(`  PIN del atleta (Martina Gomez): ${martina.accessPin}`);
-  console.log("  → Entrá a /hoy/1111 desde el celular para ver el Día B pendiente.");
+  console.log("  → Entrá a /hoy/1111 desde el celular para ver el Día 2 pendiente.");
 }
 
 main()

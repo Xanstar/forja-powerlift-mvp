@@ -79,6 +79,7 @@ export const programs = sqliteTable("programs", {
     .references(() => athletes.id, { onDelete: "cascade" }),
   nombre: text("nombre").notNull(), // ej. "Bloque de fuerza - Julio"
   fechaInicio: integer("fecha_inicio", { mode: "timestamp" }), // lunes de la semana 1 (base del calendario del atleta)
+  semanas: integer("semanas").notNull().default(4), // duración del programa (lista finita, no infinito)
   activo: integer("activo", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

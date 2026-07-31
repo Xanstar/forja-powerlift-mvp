@@ -13,10 +13,7 @@ import { eq, and } from "drizzle-orm";
 import { AthleteHome } from "@/components/athlete-home";
 import {
   fechaInicioSemana,
-  semanaDelMes,
-  esSemanaActual,
-  etiquetaChipSemana,
-  encabezadoSemana,
+  etiquetaSemana,
 } from "@/lib/calendario";
 import { normalizarNombre, capitalizarNombre } from "@/lib/nombres";
 
@@ -138,12 +135,9 @@ export default async function HoyPage({
     const fechaSemana = fechaInicioSemana(fechaInicioPrograma, semana.numero);
     return semana.days.map((dia) => ({
       id: dia.id,
-      nombre: dia.nombre,
+      nombre: capitalizarNombre(dia.nombre),
       semanaNumero: semana.numero,
-      semanaDelMes: semanaDelMes(fechaSemana),
-      esSemanaActual: esSemanaActual(fechaSemana),
-      chipSemana: etiquetaChipSemana(fechaSemana),
-      encabezadoSemana: encabezadoSemana(fechaSemana),
+      etiquetaSemana: etiquetaSemana(semana.numero, fechaSemana),
       completado: dia.completions.length > 0,
       exercises: dia.exercises.map((ex) => ({
         id: ex.id,
@@ -170,7 +164,32 @@ export default async function HoyPage({
     }));
   });
 
+  const semanas = semanasPrograma
+    .map((semana) => {
+      const fechaSemana = fechaInicioSemana(fechaInicioPrograma, semana.numero);
+      const diasSemana = dias.filter((d) => d.semanaNumero === semana.numero);
+      return {
+        numero: semana.numero,
+        etiqueta: etiquetaSemana(semana.numero, fechaSemana),
+        completados: diasSemana.filter((d) => d.completado).length,
+        dias: diasSemana,
+      };
+    })
+    .filter((s) => s.dias.length > 0);
+
+  const totalDias = dias.length;
+  const completadosTotal = dias.filter((d) => d.completado).length;
+  const proximoDiaId =
+    dias.find((d) => !d.completado)?.id ?? dias[0]?.id ?? null;
+
   return (
-    <AthleteHome nombre={atleta.nombre} pin={pin} diasIniciales={dias} />
+    <AthleteHome
+      nombre={atleta.nombre}
+      pin={pin}
+      semanas={semanas}
+      proximoDiaId={proximoDiaId}
+      totalDias={totalDias}
+      completadosTotal={completadosTotal}
+    />
   );
 }

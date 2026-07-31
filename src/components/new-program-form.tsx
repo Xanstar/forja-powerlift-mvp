@@ -9,6 +9,7 @@ import { inicioDeSemana } from "@/lib/calendario";
 
 export function NewProgramForm({ athleteId }: { athleteId: string }) {
   const [nombre, setNombre] = useState("");
+  const [semanas, setSemanas] = useState(4);
   const [fechaInicio, setFechaInicio] = useState(() => {
     const lunes = inicioDeSemana(new Date());
     const mes = String(lunes.getMonth() + 1).padStart(2, "0");
@@ -29,6 +30,7 @@ export function NewProgramForm({ athleteId }: { athleteId: string }) {
         await crearPrograma(
           athleteId,
           nombre,
+          semanas,
           fechaInicio ? new Date(`${fechaInicio}T00:00:00`) : undefined
         );
         setLoading(false);
@@ -46,15 +48,30 @@ export function NewProgramForm({ athleteId }: { athleteId: string }) {
           {loading ? "Creando..." : "Iniciar programa"}
         </Button>
       </div>
-      <label className="mt-3 block text-left text-xs text-chalk-muted">
-        Comienza el lunes de
-        <input
-          type="date"
-          value={fechaInicio}
-          onChange={(e) => setFechaInicio(e.target.value)}
-          className="ml-2 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-chalk"
-        />
-      </label>
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-chalk-muted">
+        <label className="flex items-center gap-2">
+          Semanas
+          <input
+            type="number"
+            min={1}
+            max={16}
+            value={semanas}
+            onChange={(e) =>
+              setSemanas(Math.min(16, Math.max(1, parseInt(e.target.value, 10) || 1)))
+            }
+            className="w-16 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-chalk"
+          />
+        </label>
+        <label className="flex items-center gap-2">
+          Comienza el lunes de
+          <input
+            type="date"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+            className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-chalk"
+          />
+        </label>
+      </div>
     </form>
   );
 }

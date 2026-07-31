@@ -1,0 +1,1 @@
+ALTER TABLE `programs` ADD `semanas` integer DEFAULT 4 NOT NULL;

@@ -135,8 +135,9 @@ export default async function AtletaDetallePage({
             </p>
             <PlanBuilder
               athleteId={id}
-              programId={programaActivo.id}
               semanas={programaActivo.weeks}
+              semanasTotal={programaActivo.semanas}
+              fechaInicio={programaActivo.fechaInicio}
             />
           </>
         )}
