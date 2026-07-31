@@ -12,6 +12,11 @@ import {
   eliminarDia,
 } from "@/lib/actions/planning";
 import { fechaInicioSemana, rangoSemana } from "@/lib/calendario";
+import {
+  CATALOGO_EJERCICIOS,
+  GRUPOS_CATALOGO,
+  type EjercicioCatalogo,
+} from "@/lib/catalogo-ejercicios";
 import { cn } from "@/lib/utils";
 
 type SetPlan = {
@@ -196,28 +201,85 @@ function NuevoEjercicioForm({
   athleteId: string;
   onDone: () => void;
 }) {
+  const [nombre, setNombre] = useState("");
+  const [descanso, setDescanso] = useState("");
+  const [observaciones, setObservaciones] = useState("");
+
+  function elegirDelCatalogo(ejercicio: EjercicioCatalogo) {
+    setNombre(ejercicio.nombre);
+    setDescanso(ejercicio.descanso);
+  }
+
   return (
-    <form
-      action={async (formData) => {
-        await crearEjercicio(dayId, athleteId, formData);
-        onDone();
-      }}
-      className="mt-3 space-y-2 rounded-lg border border-border bg-surface p-3"
-    >
-      <Input name="nombre" placeholder="Nombre del ejercicio" required autoFocus />
-      <div className="grid grid-cols-2 gap-2">
-        <Input name="descanso" placeholder="Descanso (ej. 3 min)" />
-        <Input name="observaciones" placeholder="Observaciones" />
+    <div className="mt-3 space-y-3 rounded-lg border border-border bg-surface p-3">
+      <div className="space-y-2">
+        {GRUPOS_CATALOGO.map(({ grupo, titulo }) => (
+          <div key={grupo}>
+            <p className="mb-1.5 text-xs uppercase tracking-wide text-chalk-faint">
+              {titulo}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {CATALOGO_EJERCICIOS.filter((e) => e.grupo === grupo).map(
+                (ejercicio) => (
+                  <button
+                    key={ejercicio.nombre}
+                    type="button"
+                    onClick={() => elegirDelCatalogo(ejercicio)}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs transition-colors",
+                      nombre === ejercicio.nombre
+                        ? "border-accent bg-accent text-white"
+                        : "border-border-strong bg-background text-chalk-muted hover:border-accent hover:text-accent"
+                    )}
+                  >
+                    {ejercicio.nombre}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="flex gap-2">
-        <Button type="submit" size="sm">
-          Guardar
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onDone}>
-          Cancelar
-        </Button>
-      </div>
-    </form>
+
+      <form
+        action={async (formData) => {
+          await crearEjercicio(dayId, athleteId, formData);
+          onDone();
+        }}
+        className="space-y-2"
+      >
+        <Input
+          name="nombre"
+          placeholder="Nombre del ejercicio (o elegí uno de la lista)"
+          required
+          autoFocus
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            name="descanso"
+            placeholder="Descanso (ej. 3 min)"
+            value={descanso}
+            onChange={(e) => setDescanso(e.target.value)}
+          />
+          <Input
+            name="observaciones"
+            placeholder="Observaciones"
+            value={observaciones}
+            onChange={(e) => setObservaciones(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button type="submit" size="sm">
+            Guardar
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={onDone}>
+            Cancelar
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }
 
