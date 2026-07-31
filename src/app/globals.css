@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+
+:root {
+  /* Iron & chalk — tema oscuro pensado para powerlifting, no un dark mode genérico */
+  --background: #0c0d0f;
+  --surface: #16171a;
+  --surface-hover: #1d1e22;
+  --border: #26272b;
+  --border-strong: #34353a;
+  --chalk: #f2f1ed;
+  --chalk-muted: #9a9a9e;
+  --chalk-faint: #67686c;
+  --accent: #e5484d;       /* rojo competición — solo para acciones primarias y PRs */
+  --accent-hover: #ff5b60;
+  --steel: #5b7a9e;        /* acento secundario, frío, para datos/gráficos */
+  --success: #4fae7a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-chalk: var(--chalk);
+  --color-chalk-muted: var(--chalk-muted);
+  --color-chalk-faint: var(--chalk-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-steel: var(--steel);
+  --color-success: var(--success);
+  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--chalk);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+/* focus visible para accesibilidad de teclado */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
