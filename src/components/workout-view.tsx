@@ -43,12 +43,16 @@ export function WorkoutView({
   dia,
   semanaNumero,
   pin,
+  completado = false,
+  onCompletado,
 }: {
   dia: Dia;
   semanaNumero: number;
   pin: string;
+  completado?: boolean;
+  onCompletado?: () => void;
 }) {
-  const [terminado, setTerminado] = useState(false);
+  const [terminado, setTerminado] = useState(completado);
   const [, startTransition] = useTransition();
 
   // Si el atleta perdió señal a mitad de entrenamiento, apenas vuelve la
@@ -68,26 +72,44 @@ export function WorkoutView({
 
   if (terminado) {
     return (
-      <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-        <CheckCircle2 size={48} className="mb-4 text-success" />
-        <p className="font-display text-xl font-bold text-chalk">
-          ¡Entrenamiento completado!
-        </p>
-        <p className="mt-1 text-sm text-chalk-muted">
-          Nos vemos en el próximo.
-        </p>
+      <div>
+        <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+          <CheckCircle2 size={40} className="mb-3 text-success" />
+          <p className="font-display text-xl font-bold text-chalk">
+            {completado ? "Día completado" : "¡Entrenamiento completado!"}
+          </p>
+          <p className="mt-1 text-sm text-chalk-muted">
+            {completado
+              ? "Esto es lo que registraste en esta sesión."
+              : "Nos vemos en el próximo."}
+          </p>
+        </div>
+
+        <div className="mt-2 space-y-5">
+          {dia.exercises.map((ex) => (
+            <ExerciseLogger key={ex.id} ejercicio={ex} completado />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-5">
-      <p className="text-xs uppercase tracking-wide text-chalk-muted">
-        Semana {semanaNumero}
-      </p>
-      <h1 className="font-display text-xl font-bold text-chalk">
-        {dia.nombre}
-      </h1>
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-chalk-muted">
+            Semana {semanaNumero}
+          </p>
+          <h1 className="font-display text-xl font-bold text-chalk">
+            {dia.nombre}
+          </h1>
+        </div>
+        <p className="text-xs text-chalk-muted">
+          {setsCompletados}/{totalSets} sets
+        </p>
+      </div>
+
       <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface">
         <div
           className="h-full bg-accent transition-all"
@@ -103,7 +125,7 @@ export function WorkoutView({
         ))}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background p-4">
+      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background p-4 pb-6">
         <Button
           className="w-full"
           size="lg"
@@ -111,6 +133,7 @@ export function WorkoutView({
             startTransition(async () => {
               await completarDia(dia.id, pin);
               setTerminado(true);
+              onCompletado?.();
             })
           }
         >
@@ -121,7 +144,13 @@ export function WorkoutView({
   );
 }
 
-function ExerciseLogger({ ejercicio }: { ejercicio: Ejercicio }) {
+function ExerciseLogger({
+  ejercicio,
+  completado = false,
+}: {
+  ejercicio: Ejercicio;
+  completado?: boolean;
+}) {
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <p className="font-medium text-chalk">{ejercicio.nombre}</p>
@@ -135,14 +164,20 @@ function ExerciseLogger({ ejercicio }: { ejercicio: Ejercicio }) {
 
       <div className="mt-3 space-y-2">
         {ejercicio.sets.map((set) => (
-          <SetRow key={set.id} set={set} />
+          <SetRow key={set.id} set={set} completado={completado} />
         ))}
       </div>
     </div>
   );
 }
 
-function SetRow({ set }: { set: SetPlan }) {
+function SetRow({
+  set,
+  completado = false,
+}: {
+  set: SetPlan;
+  completado?: boolean;
+}) {
   const yaHecho = set.logs.length > 0;
   const [abierto, setAbierto] = useState(false);
   const [peso, setPeso] = useState(
@@ -166,6 +201,38 @@ function SetRow({ set }: { set: SetPlan }) {
         ? `${set.pesoKg}kg`
         : "—"
       : `${set.porcentajeRm}% RM`;
+
+  const log = set.logs[0];
+
+  if (completado) {
+    return (
+      <div className="rounded-lg border border-border bg-background px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            {log ? (
+              <CheckCircle2 size={16} className="shrink-0 text-success" />
+            ) : (
+              <Circle size={16} className="shrink-0 text-chalk-faint" />
+            )}
+            <span className="text-sm text-chalk">
+              Set {set.numeroSet} · {set.repeticionesObjetivo} reps ·{" "}
+              {pesoObjetivo}
+              {set.rpeObjetivo ? ` · RPE ${set.rpeObjetivo}` : ""}
+            </span>
+          </div>
+        </div>
+        {log && (
+          <p className="mt-1.5 pl-[26px] text-xs text-chalk-muted">
+            Registraste:{" "}
+            <span className="text-chalk">
+              {log.pesoKgReal}kg × {log.repeticionesReales}
+              {log.rpeReal ? ` @ RPE ${log.rpeReal}` : ""}
+            </span>
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { athletes, programs, dayCompletions, days as daysTable } from "@/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
-import { Dumbbell } from "lucide-react";
-import { WorkoutView } from "@/components/workout-view";
+import { athletes, programs } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { AthleteHome } from "@/components/athlete-home";
 
 export default async function HoyPage({
   params,
@@ -28,7 +27,12 @@ export default async function HoyPage({
             with: {
               exercises: {
                 orderBy: (e, { asc }) => [asc(e.orden)],
-                with: { sets: { with: { logs: true } } },
+                with: {
+                  sets: {
+                    orderBy: (s, { asc }) => [asc(s.numeroSet)],
+                    with: { logs: true },
+                  },
+                },
               },
               completions: true,
             },
@@ -38,41 +42,37 @@ export default async function HoyPage({
     },
   });
 
-  // Encontrar el primer día sin completar del programa activo
-  let proximoDia: (NonNullable<typeof programaActivo>["weeks"][number]["days"][number] & {
-    semanaNumero: number;
-  }) | null = null;
-  outer: if (programaActivo) {
-    for (const semana of programaActivo.weeks) {
-      for (const dia of semana.days) {
-        if (dia.completions.length === 0) {
-          proximoDia = { ...dia, semanaNumero: semana.numero };
-          break outer;
-        }
-      }
-    }
-  }
+  const dias = (programaActivo?.weeks ?? []).flatMap((semana) =>
+    semana.days.map((dia) => ({
+      id: dia.id,
+      nombre: dia.nombre,
+      semanaNumero: semana.numero,
+      completado: dia.completions.length > 0,
+      exercises: dia.exercises.map((ex) => ({
+        id: ex.id,
+        nombre: ex.nombre,
+        descanso: ex.descanso,
+        observaciones: ex.observaciones,
+        sets: ex.sets.map((s) => ({
+          id: s.id,
+          numeroSet: s.numeroSet,
+          repeticionesObjetivo: s.repeticionesObjetivo,
+          pesoTipo: s.pesoTipo,
+          pesoKg: s.pesoKg,
+          porcentajeRm: s.porcentajeRm,
+          rpeObjetivo: s.rpeObjetivo,
+          logs: s.logs.map((l) => ({
+            id: l.id,
+            pesoKgReal: l.pesoKgReal,
+            repeticionesReales: l.repeticionesReales,
+            rpeReal: l.rpeReal,
+          })),
+        })),
+      })),
+    }))
+  );
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <header className="flex items-center gap-2 border-b border-border px-4 py-4">
-        <Dumbbell size={18} className="text-accent" />
-        <span className="font-display text-sm font-bold text-chalk">
-          Hola, {atleta.nombre}
-        </span>
-      </header>
-
-      {!programaActivo || !proximoDia ? (
-        <div className="px-4 py-16 text-center text-sm text-chalk-muted">
-          No tenés entrenamientos pendientes por ahora. ¡Buen descanso! 💪
-        </div>
-      ) : (
-        <WorkoutView
-          dia={proximoDia}
-          semanaNumero={proximoDia.semanaNumero}
-          pin={pin}
-        />
-      )}
-    </div>
+    <AthleteHome nombre={atleta.nombre} pin={pin} diasIniciales={dias} />
   );
 }
