@@ -15,8 +15,8 @@ Abrí `http://localhost:3000`.
 
 ### Credenciales de demo
 
-- **Entrenador:** `demo@forja.app` / `demo1234`
-- **Atleta (vista por celular, sin cuenta):** entrá a `http://localhost:3000/hoy/4821`
+- **Entrenador:** `admin` / `admin`
+- **Atleta (vista por celular, sin cuenta):** entrá a `http://localhost:3000/hoy/1111`
   (PIN de Martina Gómez, con un día ya completado y un "Día B" pendiente para probar el logging)
 
 ## Qué hay hecho

@@ -14,12 +14,12 @@ import {
 } from "./schema";
 
 async function main() {
-  const passwordHash = await bcrypt.hash("demo1234", 10);
+  const passwordHash = await bcrypt.hash("admin", 10);
   const [coach] = await db
     .insert(coaches)
     .values({
       nombre: "Entrenador Demo",
-      email: "demo@forja.app",
+      email: "admin",
       passwordHash,
     })
     .returning();
@@ -36,7 +36,7 @@ async function main() {
       sexo: "femenino",
       estado: "activo",
       notas: "Prioridad técnica en sentadilla.",
-      accessPin: "4821",
+      accessPin: "1111",
     })
     .returning();
 
@@ -118,9 +118,9 @@ async function main() {
   );
 
   console.log("✓ Datos de demo cargados.\n");
-  console.log("  Login del entrenador: demo@forja.app / demo1234");
+  console.log("  Login del entrenador: admin / admin");
   console.log(`  PIN del atleta (Martina Gomez): ${martina.accessPin}`);
-  console.log("  → Entrá a /hoy/4821 desde el celular para ver el Día B pendiente.");
+  console.log("  → Entrá a /hoy/1111 desde el celular para ver el Día B pendiente.");
 }
 
 main()

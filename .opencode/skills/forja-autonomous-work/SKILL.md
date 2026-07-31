@@ -12,7 +12,7 @@ El usuario de este proyecto quiere que actúes por tu cuenta: **hacé todo lo ne
 - App: Next.js 16 (App Router) + TypeScript + Tailwind v4 + Drizzle ORM + libSQL.
 - Repo GitHub: `https://github.com/Xanstar/forja-powerlift-mvp` (privado, rama `main`). Credenciales de GitHub viven en el credential manager de Windows (se obtienen con `git credential fill`); se pueden usar para operar el repo vía API REST.
 - DB producción: Turso (libSQL en la nube) — `libsql://forja-xanstar.aws-us-east-1.turso.io`, token en `.env` (`TURSO_AUTH_TOKEN`).
-- Demo creds: `demo@forja.app` / `demo1234` · PIN atleta: `4821` (`/hoy/4821`).
+- Demo creds: `admin` / `admin` · PIN atleta: `1111` (`/hoy/1111`).
 
 ## Reglas de autonomía
 
