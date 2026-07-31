@@ -21,7 +21,7 @@ Abrí `http://localhost:3000`.
 
 ## Qué hay hecho
 
-- Auth de entrenador (registro, login, recuperar contraseña — el envío de email real queda pendiente)
+- Auth de entrenador (un solo admin por instancia — no hay auto-registro)
 - Dashboard con métricas reales (atletas activos, pendientes/completados hoy)
 - CRUD de atletas completo
 - Constructor de planificación: Programa → Semana → Día → Ejercicio → Sets individuales
@@ -52,8 +52,20 @@ Abrí `http://localhost:3000`.
 
 ## Lo que falta para producción
 
-1. Envío real de email para recuperar contraseña (Resend/Postmark)
-2. Migrar de SQLite a Postgres (Neon/Supabase) para despliegue multi-usuario real
-3. Rate limiting en el acceso por PIN del atleta (hoy es un PIN de 4 dígitos sin límite de intentos)
-4. Íconos reales para el manifest de PWA (`public/manifest.json` referencia `icon-192.png`/`icon-512.png` que no existen todavía)
-5. Deploy (Vercel es la opción más directa para este stack)
+1. Migrar de SQLite a Postgres (Neon/Supabase) para despliegue multi-tenant real
+2. Rate limiting en el acceso por PIN del atleta (hoy es un PIN de 4 dígitos sin límite de intentos)
+3. Deploy (Vercel es la opción más directa para este stack)
+
+## Modelo de producto: una instancia por gimnasio
+
+La app **no tiene auto-registro**: cada deploy es la app "personificada" de un solo
+gimnasio/entrenador, con su propio nombre, su propio link y su propia base de datos.
+Lo que cambia entre gimnasios son variables de entorno:
+
+- `APP_NAME` — nombre que se muestra en la landing, el login y la PWA instalada
+- `ADMIN_NOMBRE`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` — credenciales del admin (se aplican con `db:seed`)
+- `DATABASE_URL`, `TURSO_AUTH_TOKEN` — la base de datos Turso de ese gimnasio
+
+Para crear la instancia de un gimnasio nuevo: clonar este repo, crear su base en Turso,
+correr `db:migrate` + `db:seed` contra esa base, y deployar a un proyecto Vercel propio
+con esas env vars. Los atletas entran por PIN, sin cuenta.

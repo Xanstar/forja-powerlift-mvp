@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Dumbbell, User, Smartphone } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { appName } from "@/lib/config";
 
 export default async function RootPage() {
   const session = await auth();
@@ -10,7 +11,7 @@ export default async function RootPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-10">
       <Dumbbell size={44} className="text-accent" />
       <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-chalk">
-        Forja
+        {appName}
       </h1>
       <p className="mt-2 max-w-xs text-center text-sm text-chalk-muted">
         Planificación de powerlifting para tu gimnasio

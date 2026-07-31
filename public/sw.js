@@ -1,5 +1,5 @@
 const CACHE = "forja-v1";
-const APP_SHELL = ["/manifest.json"];
+const APP_SHELL = ["/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

@@ -14,12 +14,16 @@ import {
 } from "./schema";
 
 async function main() {
-  const passwordHash = await bcrypt.hash("admin", 10);
+  const nombreAdmin = process.env.ADMIN_NOMBRE || "Administrador";
+  const emailAdmin = process.env.ADMIN_EMAIL || "admin";
+  const passwordAdmin = process.env.ADMIN_PASSWORD || "admin";
+
+  const passwordHash = await bcrypt.hash(passwordAdmin, 10);
   const [coach] = await db
     .insert(coaches)
     .values({
-      nombre: "Entrenador Demo",
-      email: "admin",
+      nombre: nombreAdmin,
+      email: emailAdmin,
       passwordHash,
     })
     .returning();
@@ -118,7 +122,7 @@ async function main() {
   );
 
   console.log("✓ Datos de demo cargados.\n");
-  console.log("  Login del entrenador: admin / admin");
+  console.log(`  Login del entrenador: ${emailAdmin} / ${passwordAdmin}`);
   console.log(`  PIN del atleta (Martina Gomez): ${martina.accessPin}`);
   console.log("  → Entrá a /hoy/1111 desde el celular para ver el Día B pendiente.");
 }

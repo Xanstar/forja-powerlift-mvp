@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { appName } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Forja — Planificación para entrenadores de powerlifting",
+  title: `${appName} — Planificación para entrenadores de powerlifting`,
   description: "La plataforma para entrenadores de fuerza que dejan el cuaderno atrás.",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
