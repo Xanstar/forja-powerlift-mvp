@@ -4,7 +4,16 @@ import { db } from "@/db";
 import { athletes, days, dayCompletions, weeks, programs } from "@/db/schema";
 import { eq, and, gte, lt } from "drizzle-orm";
 import { Card } from "@/components/ui/card";
-import { Users, CheckCircle2, Clock, ArrowUpRight } from "lucide-react";
+import {
+  Users,
+  CheckCircle2,
+  Clock,
+  ArrowUpRight,
+  Crosshair,
+  FileUp,
+} from "lucide-react";
+import { marcasDeCoach, LIFTS } from "@/lib/queries";
+import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -14,6 +23,12 @@ export default async function DashboardPage() {
     where: eq(athletes.coachId, coachId),
   });
   const atletasActivos = misAtletas.filter((a) => a.estado === "activo");
+
+  const marcas = await marcasDeCoach(coachId);
+  const atletasSinMarcaCompleta = atletasActivos.filter((a) => {
+    const m = marcas.get(a.id) ?? {};
+    return LIFTS.some((l) => m[l] == null);
+  });
 
   const inicioHoy = new Date();
   inicioHoy.setHours(0, 0, 0, 0);
@@ -66,7 +81,7 @@ export default async function DashboardPage() {
         Un vistazo rápido a lo que está pasando hoy.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card>
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
@@ -102,7 +117,53 @@ export default async function DashboardPage() {
             {completadosHoy.length}
           </p>
         </Card>
+
+        <Card>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
+              Sin marca completa
+            </span>
+            <Crosshair size={16} className="text-accent" />
+          </div>
+          <p className="mt-3 font-display text-3xl font-bold text-chalk">
+            {atletasSinMarcaCompleta.length}
+          </p>
+        </Card>
       </div>
+
+      <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-accent/25 bg-accent/5 p-5">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-accent/10 p-2.5">
+            <Crosshair size={18} className="text-accent" />
+          </div>
+          <div>
+            <h2 className="font-display text-base font-semibold text-chalk">
+              Toma de marcas
+            </h2>
+            <p className="mt-0.5 text-sm text-chalk-muted">
+              Pesaje + los tres levantamientos, con Wilks e IPF GL en vivo.
+              {atletasSinMarcaCompleta.length > 0 && (
+                <>
+                  {" "}
+                  {atletasSinMarcaCompleta.length} atleta
+                  {atletasSinMarcaCompleta.length !== 1 && "s"} sin marcas
+                  completas.
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/marcas">
+            <Button>Ir a toma de marcas</Button>
+          </Link>
+          <Link href="/atletas">
+            <Button variant="secondary">
+              <FileUp size={15} /> Importar desde Excel
+            </Button>
+          </Link>
+        </div>
+      </section>
 
       <div className="mt-8">
         <div className="mb-3 flex items-center justify-between">

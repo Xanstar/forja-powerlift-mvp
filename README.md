@@ -27,6 +27,8 @@ Abrí `http://localhost:3000`.
 - Constructor de planificación: Programa → Semana → Día → Ejercicio → Sets individuales
   (peso absoluto o % de RM, RPE objetivo)
 - Récords de 1RM por atleta (sentadilla/banca/peso muerto) + Wilks y IPF GL Points calculados en el historial
+- **Toma de marcas** (`/marcas`): pesaje + los tres levantamientos en una sola pantalla, con Wilks e IPF GL calculados en vivo; acceso directo desde el dashboard
+- **Excel**: importar atletas desde la planilla del gimnasio (con sus marcas), exportar atletas + historial de marcas a Excel, y plantilla descargable
 - Vista del atleta por PIN (sin cuenta), con logging de sets, pensada para el celular en el gimnasio
 - PWA offline-first: la vista del atleta cachea la rutina y encola los sets registrados sin señal,
   sincronizando solos cuando vuelve la conexión

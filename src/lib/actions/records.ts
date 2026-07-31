@@ -15,6 +15,8 @@ export async function crearRecord(athleteId: string, formData: FormData) {
   // Actualiza el peso corporal si vino junto (opcional, no usado hoy)
   revalidatePath(`/atletas/${athleteId}`);
   revalidatePath(`/atletas/${athleteId}/historial`);
+  revalidatePath("/marcas");
+  revalidatePath("/dashboard");
 }
 
 export async function ultimosRecords(athleteId: string) {

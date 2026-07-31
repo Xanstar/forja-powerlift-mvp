@@ -4,7 +4,8 @@ import { db } from "@/db";
 import { athletes } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FileDown } from "lucide-react";
+import { ExcelImportDialog } from "@/components/excel-import-dialog";
 
 export default async function AtletasPage() {
   const session = await auth();
@@ -17,7 +18,7 @@ export default async function AtletasPage() {
 
   return (
     <div className="max-w-5xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight text-chalk">
             Atletas
@@ -26,11 +27,19 @@ export default async function AtletasPage() {
             {misAtletas.length} atleta{misAtletas.length !== 1 && "s"} en total
           </p>
         </div>
-        <Link href="/atletas/nuevo">
-          <Button>
-            <Plus size={16} /> Nuevo atleta
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExcelImportDialog />
+          <a href="/api/export/atletas">
+            <Button variant="secondary">
+              <FileDown size={15} /> Exportar Excel
+            </Button>
+          </a>
+          <Link href="/atletas/nuevo">
+            <Button>
+              <Plus size={16} /> Nuevo atleta
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {misAtletas.length === 0 ? (

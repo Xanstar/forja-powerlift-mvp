@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, Users, LogOut, Dumbbell } from "lucide-react";
+import { LayoutDashboard, Users, LogOut, Dumbbell, Crosshair } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/atletas", label: "Atletas", icon: Users },
+  { href: "/marcas", label: "Marcas", icon: Crosshair },
 ];
 
 export function Sidebar({ nombreEntrenador }: { nombreEntrenador: string }) {
