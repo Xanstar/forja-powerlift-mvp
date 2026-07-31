@@ -33,6 +33,10 @@ Abrí `http://localhost:3000`.
 - PWA offline-first: la vista del atleta cachea la rutina y encola los sets registrados sin señal,
   sincronizando solos cuando vuelve la conexión
 - Historial con gráfico de evolución de cargas por ejercicio
+- **UX de entrenamiento**: check de un toque por serie (online u offline), timer de descanso
+  automático al completar una serie (barra fija con cuenta regresiva y vibración), "última vez"
+  con la sesión anterior por ejercicio, auto-scroll a la próxima serie pendiente y
+  navegación por días con fade lateral
 
 ## Decisiones de arquitectura (por qué)
 

@@ -16,6 +16,11 @@ export type DiaAtleta = {
     nombre: string;
     descanso: string | null;
     observaciones: string | null;
+    ultimaVez: {
+      series: number;
+      reps: number;
+      peso: number | null;
+    } | null;
     sets: {
       id: string;
       numeroSet: number;
@@ -92,31 +97,35 @@ export function AthleteHome({
       ) : (
         <div>
           <div className="sticky top-0 z-10 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {dias.map((dia) => (
-                <button
-                  key={dia.id}
-                  onClick={() => setSeleccionado(dia.id)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
-                    seleccionado === dia.id
-                      ? "border-accent bg-accent text-white"
-                      : "border-border bg-surface text-chalk-muted hover:text-chalk"
-                  )}
-                >
-                  {dia.completado ? (
-                    <CheckCircle2 size={14} />
-                  ) : (
-                    <span
-                      className={cn(
-                        "h-1.5 w-1.5 rounded-full",
-                        seleccionado === dia.id ? "bg-white" : "bg-accent"
-                      )}
-                    />
-                  )}
-                  Sem {dia.semanaNumero} · {dia.nombre}
-                </button>
-              ))}
+            <div className="relative">
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {dias.map((dia) => (
+                  <button
+                    key={dia.id}
+                    onClick={() => setSeleccionado(dia.id)}
+                    className={cn(
+                      "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+                      seleccionado === dia.id
+                        ? "border-accent bg-accent text-white"
+                        : "border-border bg-surface text-chalk-muted hover:text-chalk"
+                    )}
+                  >
+                    {dia.completado ? (
+                      <CheckCircle2 size={14} />
+                    ) : (
+                      <span
+                        className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          seleccionado === dia.id ? "bg-white" : "bg-accent"
+                        )}
+                      />
+                    )}
+                    Sem {dia.semanaNumero} · {dia.nombre}
+                  </button>
+                ))}
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
             </div>
           </div>
 
