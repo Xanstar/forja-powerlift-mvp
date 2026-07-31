@@ -2,7 +2,7 @@
   "name": "Forja — Powerlifting Coaching",
   "short_name": "Forja",
   "description": "Planificación y seguimiento para entrenadores de powerlifting.",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0c0d0f",
   "theme_color": "#0c0d0f",
