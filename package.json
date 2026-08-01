@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test:auth": "node --import tsx --test tests/authorization.test.ts",
     "start": "next start",
     "db:migrate": "node --env-file=.env --import tsx src/db/migrate.ts",
     "db:seed": "node --env-file=.env --import tsx src/db/seed.ts"
