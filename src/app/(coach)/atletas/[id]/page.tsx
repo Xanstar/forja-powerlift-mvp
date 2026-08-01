@@ -11,6 +11,7 @@ import { RecordForm } from "@/components/record-form";
 import { NewProgramForm } from "@/components/new-program-form";
 import { ultimosRecords } from "@/lib/actions/records";
 import { EditAthleteForm } from "@/components/edit-athlete-form";
+import { AthleteInvitation } from "@/components/athlete-invitation";
 
 const LIFT_LABELS: Record<string, string> = {
   sentadilla: "Sentadilla",
@@ -78,15 +79,27 @@ export default async function AtletaDetallePage({
         </Link>
       </div>
 
-      <Card className="mt-6 flex items-center gap-3 border-steel/30 bg-steel/5">
-        <Smartphone size={18} className="shrink-0 text-steel" />
-        <p className="text-sm text-chalk-muted">
-          Acceso del atleta desde el celular:{" "}
-          <Link href={`/hoy/${atleta.accessPin}`} className="text-chalk hover:underline">
-            forja.app/hoy/{atleta.accessPin}
-          </Link>{" "}
-          — no necesita cuenta, solo este PIN.
-        </p>
+      <Card className="mt-6 space-y-3 border-steel/30 bg-steel/5">
+        <div className="flex items-start gap-3">
+          <Smartphone size={18} className="shrink-0 text-steel" />
+          <div className="text-sm text-chalk-muted">
+            <p>
+              WhatsApp:{" "}
+              <span className="text-chalk">
+                {atleta.telefonoE164 ?? "Sin teléfono"}
+              </span>
+              {atleta.telefonoVerificadoAt
+                ? " · verificado"
+                : " · pendiente de verificación"}
+            </p>
+            <p className="mt-1 text-xs text-chalk-faint">
+              El PIN legado sigue disponible durante la transición y puede deshabilitarse por configuración.
+            </p>
+          </div>
+        </div>
+        {atleta.telefonoE164 && (
+          <AthleteInvitation athleteId={atleta.id} />
+        )}
       </Card>
 
       <section className="mt-8">

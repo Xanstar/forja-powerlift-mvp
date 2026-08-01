@@ -48,6 +48,11 @@ Copiá `.env.example` a `.env` y ajustá solo lo necesario. Nunca confirmes `.en
 | `ADMIN_NOMBRE` | Nombre del entrenador creado por el seed | No |
 | `ADMIN_EMAIL` | Usuario creado por el seed | No |
 | `ADMIN_PASSWORD` | Contraseña creada por el seed | No |
+| `APP_URL` | URL pública incluida en la invitación | Para enviar invitaciones |
+| `EVOLUTION_API_URL` | URL base del servicio persistente Evolution API | Para enviar invitaciones |
+| `EVOLUTION_API_KEY` | API key de Evolution API; sólo servidor | Para enviar invitaciones |
+| `EVOLUTION_INSTANCE_NAME` | Instancia `WHATSAPP-BAILEYS` conectada por QR | Para enviar invitaciones |
+| `ATHLETE_LEGACY_PIN_ENABLED` | Mantiene el ingreso histórico por PIN; `false` lo deshabilita | No; predeterminado `true` |
 
 Los valores predeterminados del seed son solo para desarrollo. Cambiá `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `AUTH_SECRET` antes de usar un entorno compartido.
 
@@ -84,6 +89,7 @@ El repositorio no define actualmente scripts de lint ni typecheck aislado; el bu
 - Programación por programa, semana, día, ejercicio y series individuales.
 - Registro de marcas, historial y cálculos Wilks/IPF GL.
 - Vista móvil del atleta por PIN y cola offline para registrar series.
+- Alta invite-only con verificación de teléfono por WhatsApp y sesión firmada.
 - PWA con rutina cacheada y sincronización al recuperar conexión.
 
 ## Arquitectura
@@ -102,10 +108,18 @@ El modelo principal sigue la jerarquía Programa -> Semana -> Día -> Ejercicio 
 
 ## Seguridad y despliegue
 
-No uses este estado del repositorio con información real de atletas. Antes de producción, como mínimo:
+### Activación de atletas por WhatsApp
+
+El entrenador registra un teléfono en formato E.164 estricto (`+`, código de país y entre 8 y 15 dígitos, sin espacios) y envía la invitación desde el detalle del atleta. Evolution API recibe `POST /message/sendText/{instance}` desde el servidor; su API key nunca llega al navegador. La instancia debe ejecutarse como servicio persistente separado de Vercel y estar conectada por QR.
+
+Los códigos son aleatorios de 6 dígitos, se almacenan sólo como HMAC ligado al desafío y teléfono, vencen a los 10 minutos, admiten 5 intentos, se consumen una vez y tienen cooldown de reenvío de 60 segundos. La verificación emite la cookie HMAC existente de 8 horas. Las respuestas públicas son genéricas para evitar enumeración.
+
+El PIN corto continúa habilitado para no romper la demo ni producción durante la transición. Es un mecanismo más débil y reutilizable: después de activar a los atletas existentes, definí `ATHLETE_LEGACY_PIN_ENABLED=false`. Esto deshabilita nuevas sesiones por PIN; las rutas del atleta siguen exigiendo la cookie firmada.
+
+Antes de usar datos reales en producción, como mínimo:
 
 - Corregí las Server Actions que todavía no validan autorización y pertenencia de recursos.
-- Fortalecé el acceso por PIN y agregá rate limiting; el PIN actual es corto y no limita intentos.
+- Deshabilitá el fallback por PIN una vez completada la transición y agregá rate limiting distribuido si desplegás múltiples instancias.
 - Reemplazá todas las credenciales de demostración y configurá secretos solo en el proveedor.
 - Revisá las vulnerabilidades conocidas de dependencias con `pnpm audit --prod`.
 - Definí una estrategia de base de datos, backups y aislamiento acorde al despliegue.

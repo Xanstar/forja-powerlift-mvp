@@ -1,16 +1,35 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { and, eq, gt, isNull, lt } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { athleteActivationChallenges, athletes } from "@/db/schema";
 import {
+  ACTIVATION_CODE_TTL_MS,
   ACTIVATION_MAX_ATTEMPTS,
+  canSendActivation,
+  createActivationCode,
+  hashActivationCode,
   normalizePhoneE164,
   verifyActivationCode,
 } from "@/lib/athlete-activation";
-import { establishAthleteAccess } from "@/lib/server-authorization";
+import {
+  activationUrlFromEnv,
+  createEvolutionClient,
+  EvolutionConfigurationError,
+  evolutionConfigFromEnv,
+} from "@/lib/evolution-client";
+import {
+  establishAthleteAccess,
+  requireCoachResource,
+} from "@/lib/server-authorization";
 
+export type InvitationState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
 export type ActivationState = { status: "idle" | "error"; message: string };
 
 const GENERIC_ACTIVATION_ERROR =
@@ -20,6 +39,104 @@ function authSecret() {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error("La autenticación del servidor no está configurada.");
   return secret;
+}
+
+export async function sendAthleteInvitation(
+  athleteId: string,
+  _previousState: InvitationState
+): Promise<InvitationState> {
+  await requireCoachResource("athlete", athleteId);
+  const athlete = await db.query.athletes.findFirst({
+    where: eq(athletes.id, athleteId),
+  });
+  if (!athlete?.telefonoE164) {
+    return {
+      status: "error",
+      message: "Guardá un teléfono E.164 antes de enviar la invitación.",
+    };
+  }
+
+  let client: ReturnType<typeof createEvolutionClient>;
+  let activationUrl: string;
+  try {
+    client = createEvolutionClient(evolutionConfigFromEnv());
+    activationUrl = activationUrlFromEnv();
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof EvolutionConfigurationError
+          ? error.message
+          : "No se pudo preparar el envío de WhatsApp.",
+    };
+  }
+
+  const previous = await db.query.athleteActivationChallenges.findFirst({
+    where: eq(athleteActivationChallenges.athleteId, athleteId),
+  });
+  const now = new Date();
+  if (previous && !canSendActivation(previous.sentAt, now)) {
+    return {
+      status: "error",
+      message: "Esperá un minuto antes de reenviar la invitación.",
+    };
+  }
+
+  const challengeId = randomUUID();
+  const code = createActivationCode();
+  const codeHash = hashActivationCode(
+    challengeId,
+    athlete.telefonoE164,
+    code,
+    authSecret()
+  );
+  await db
+    .insert(athleteActivationChallenges)
+    .values({
+      id: challengeId,
+      athleteId,
+      codeHash,
+      expiresAt: new Date(now.getTime() + ACTIVATION_CODE_TTL_MS),
+      attempts: 0,
+      sentAt: now,
+      consumedAt: null,
+    })
+    .onConflictDoUpdate({
+      target: athleteActivationChallenges.athleteId,
+      set: {
+        id: challengeId,
+        codeHash,
+        expiresAt: new Date(now.getTime() + ACTIVATION_CODE_TTL_MS),
+        attempts: 0,
+        sentAt: now,
+        consumedAt: null,
+      },
+    });
+
+  try {
+    await client.sendText(
+      athlete.telefonoE164,
+      `Forja: tu código de activación es ${code}. Vence en 10 minutos. Ingresalo junto con tu teléfono en ${activationUrl}. Si no esperabas este mensaje, ignoralo.`
+    );
+  } catch (error) {
+    await db
+      .delete(athleteActivationChallenges)
+      .where(eq(athleteActivationChallenges.id, challengeId));
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo enviar la invitación por WhatsApp.",
+    };
+  }
+
+  await db
+    .update(athletes)
+    .set({ invitacionEnviadaAt: now })
+    .where(eq(athletes.id, athleteId));
+  revalidatePath(`/atletas/${athleteId}`);
+  return { status: "success", message: "Invitación enviada por WhatsApp." };
 }
 
 export async function activateAthlete(
