@@ -45,11 +45,33 @@ export const athletes = sqliteTable("athletes", {
     .notNull()
     .default("activo"),
   notas: text("notas"),
+  telefonoE164: text("telefono_e164").unique(),
+  telefonoVerificadoAt: integer("telefono_verificado_at", { mode: "timestamp" }),
+  invitacionEnviadaAt: integer("invitacion_enviada_at", { mode: "timestamp" }),
   accessPin: text("access_pin").notNull(), // PIN de 4-6 dígitos para que el atleta entre desde su celular sin cuenta propia
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
 });
+
+export const athleteActivationChallenges = sqliteTable(
+  "athlete_activation_challenges",
+  {
+    id: text("id").primaryKey(),
+    athleteId: text("athlete_id")
+      .notNull()
+      .unique()
+      .references(() => athletes.id, { onDelete: "cascade" }),
+    codeHash: text("code_hash").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    sentAt: integer("sent_at", { mode: "timestamp" }).notNull(),
+    consumedAt: integer("consumed_at", { mode: "timestamp" }),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  }
+);
 
 // Récords de fuerza (1RM real o estimado) por levantamiento.
 // Es lo que permite programar en % y graficar evolución real de fuerza.
@@ -172,7 +194,18 @@ export const athletesRelations = relations(athletes, ({ one, many }) => ({
   coach: one(coaches, { fields: [athletes.coachId], references: [coaches.id] }),
   programs: many(programs),
   records: many(records),
+  activationChallenge: one(athleteActivationChallenges),
 }));
+
+export const athleteActivationChallengesRelations = relations(
+  athleteActivationChallenges,
+  ({ one }) => ({
+    athlete: one(athletes, {
+      fields: [athleteActivationChallenges.athleteId],
+      references: [athletes.id],
+    }),
+  })
+);
 
 export const programsRelations = relations(programs, ({ one, many }) => ({
   athlete: one(athletes, { fields: [programs.athleteId], references: [athletes.id] }),
