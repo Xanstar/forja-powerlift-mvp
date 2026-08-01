@@ -190,7 +190,7 @@ export function WorkoutView({
   if (terminado) {
     return (
       <div>
-        <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+        <div className="competition-sheet flex flex-col items-center justify-center border-y border-success px-6 py-10 text-center">
           <CheckCircle2 size={40} className="mb-3 text-success" />
           <p className="font-display text-xl font-bold text-chalk">
             {completado ? "Día completado" : "¡Entrenamiento completado!"}
@@ -215,7 +215,7 @@ export function WorkoutView({
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-chalk-muted">
+          <p className="data-label">
             {etiquetaSemana}
           </p>
           <h1 className="font-display text-xl font-bold text-chalk">
@@ -227,7 +227,7 @@ export function WorkoutView({
         </p>
       </div>
 
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface">
+      <div className="mt-3 h-2 w-full overflow-hidden border border-border-strong bg-surface">
         <div
           className="h-full bg-accent transition-all"
           style={{
@@ -249,9 +249,9 @@ export function WorkoutView({
         ))}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 p-4 pb-6 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-chalk bg-surface p-4 pb-6">
         {restante != null && (
-          <div className="mb-3 rounded-xl border border-border bg-surface p-3">
+          <div className="mb-3 border border-steel bg-blue-50 p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-chalk">
                 <Timer size={16} className="text-accent" />
@@ -264,14 +264,14 @@ export function WorkoutView({
               </div>
               <span
                 className={cn(
-                  "font-display text-lg font-bold tabular-nums",
+                  "data-number text-2xl font-bold tabular-nums",
                   timerListo ? "text-success" : "text-chalk"
                 )}
               >
                 {formatearTiempo(restante)}
               </span>
             </div>
-            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-border">
+            <div className="mt-2 h-1.5 w-full overflow-hidden bg-border">
               <div
                 className="h-full bg-accent transition-all duration-1000 ease-linear"
                 style={{
@@ -310,8 +310,8 @@ function ExerciseLogger({
   onGuardar?: (setId: string) => void;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <p className="font-medium text-chalk">{ejercicio.nombre}</p>
+    <section className="border-y border-chalk bg-surface p-4">
+      <p className="font-display text-lg font-bold tracking-tight text-chalk">{ejercicio.nombre}</p>
       {(ejercicio.descanso || ejercicio.observaciones) && (
         <p className="mt-0.5 text-xs text-chalk-muted">
           {[ejercicio.descanso, ejercicio.observaciones]
@@ -338,7 +338,7 @@ function ExerciseLogger({
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -418,7 +418,7 @@ function SetRow({
 
   if (completado) {
     return (
-      <div className="rounded-lg border border-border bg-background px-3 py-2.5">
+      <div className="border border-border-strong bg-background px-3 py-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             {log ? (
@@ -459,7 +459,7 @@ function SetRow({
       data-setid={set.id}
       data-completado={guardado ? "true" : "false"}
       className={cn(
-        "rounded-lg border px-3 py-2.5 transition-all",
+        "border px-3 py-3 transition-all",
         guardado
           ? diff.difiere
             ? "border-accent/30 bg-background"
@@ -476,7 +476,7 @@ function SetRow({
               : `Completar serie ${set.numeroSet}`
           }
           className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+            "flex h-11 w-11 shrink-0 items-center justify-center border-2 transition-colors",
             guardado
               ? "border-success bg-success/15 text-success"
               : "border-border-strong text-chalk-faint hover:border-accent hover:text-accent"
@@ -514,7 +514,7 @@ function SetRow({
               placeholder="Kg"
               value={peso}
               onChange={(e) => setPeso(e.target.value)}
-              className="rounded-md border border-border bg-surface px-2 py-2 text-center text-sm text-chalk placeholder:text-chalk-faint"
+              className="border border-border-strong bg-surface px-2 py-2 text-center text-sm text-chalk placeholder:text-chalk-faint"
             />
             <input
               type="number"
@@ -522,7 +522,7 @@ function SetRow({
               placeholder="Reps"
               value={reps}
               onChange={(e) => setReps(e.target.value)}
-              className="rounded-md border border-border bg-surface px-2 py-2 text-center text-sm text-chalk placeholder:text-chalk-faint"
+              className="border border-border-strong bg-surface px-2 py-2 text-center text-sm text-chalk placeholder:text-chalk-faint"
             />
             <input
               type="number"
@@ -530,20 +530,20 @@ function SetRow({
               placeholder="RPE"
               value={rpe}
               onChange={(e) => setRpe(e.target.value)}
-              className="rounded-md border border-border bg-surface px-2 py-2 text-center text-sm text-chalk placeholder:text-chalk-faint"
+              className="border border-border-strong bg-surface px-2 py-2 text-center text-sm text-chalk placeholder:text-chalk-faint"
             />
           </div>
           <div className="mt-2 flex items-center gap-2">
             <button
               onClick={() => startTransition(guardar)}
-              className="flex-1 rounded-md bg-accent py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+              className="min-h-11 flex-1 border border-accent bg-accent py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
             >
               Guardar serie
             </button>
             <button
               type="button"
               onClick={() => setAbierto(false)}
-              className="rounded-md px-3 py-2.5 text-sm text-chalk-muted hover:bg-surface-hover hover:text-chalk"
+              className="min-h-11 border border-transparent px-3 py-2.5 text-sm font-semibold text-chalk-muted hover:border-border hover:bg-surface-hover hover:text-chalk"
             >
               Cerrar
             </button>

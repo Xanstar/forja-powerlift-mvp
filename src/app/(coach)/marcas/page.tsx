@@ -38,7 +38,7 @@ export default async function MarcasPage() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="font-display text-2xl font-bold tracking-tight text-chalk">
+      <h1 className="font-display text-4xl font-bold tracking-[-0.04em] text-chalk">
         Toma de marcas
       </h1>
       <p className="mt-1 text-sm text-chalk-muted">

@@ -53,7 +53,7 @@ export default async function AtletaDetallePage({
   const records = await ultimosRecords(id);
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-5xl">
       <Link
         href="/atletas"
         className="mb-4 flex items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
@@ -63,7 +63,7 @@ export default async function AtletaDetallePage({
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-chalk">
+          <h1 className="font-display text-4xl font-bold tracking-[-0.04em] text-chalk">
             {atleta.nombre} {atleta.apellido}
           </h1>
           <p className="mt-1 text-sm text-chalk-muted">
@@ -73,13 +73,13 @@ export default async function AtletaDetallePage({
         </div>
         <Link
           href={`/atletas/${id}/historial`}
-          className="flex items-center gap-1.5 rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-sm text-chalk hover:bg-surface-hover"
+          className="flex min-h-11 items-center gap-1.5 border border-border-strong bg-surface px-3.5 py-2 text-sm font-semibold text-chalk hover:border-chalk hover:bg-surface-hover"
         >
           <TrendingUp size={15} /> Ver historial
         </Link>
       </div>
 
-      <Card className="mt-6 space-y-3 border-steel/30 bg-steel/5">
+      <Card className="mt-8 space-y-3 border-y border-steel bg-blue-50">
         <div className="flex items-start gap-3">
           <Smartphone size={18} className="shrink-0 text-steel" />
           <div className="text-sm text-chalk-muted">
@@ -112,7 +112,7 @@ export default async function AtletaDetallePage({
               <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
                 {LIFT_LABELS[lift]}
               </p>
-              <p className="mt-2 font-display text-2xl font-bold text-chalk">
+              <p className="data-number mt-2 text-3xl font-bold text-chalk">
                 {records[lift] ? `${records[lift].valorKg} kg` : "—"}
               </p>
               {records[lift] && (

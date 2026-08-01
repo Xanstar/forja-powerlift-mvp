@@ -73,67 +73,67 @@ export default async function DashboardPage() {
     .slice(0, 5);
 
   return (
-    <div className="max-w-5xl">
-      <h1 className="font-display text-2xl font-bold tracking-tight text-chalk">
+    <div className="max-w-6xl">
+      <h1 className="font-display text-4xl font-bold tracking-[-0.04em] text-chalk">
         Dashboard
       </h1>
       <p className="mt-1 text-sm text-chalk-muted">
         Un vistazo rápido a lo que está pasando hoy.
       </p>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card>
+      <div className="mt-8 grid grid-cols-2 border-y border-chalk lg:grid-cols-4">
+        <Card className="border-0 border-r border-chalk bg-transparent px-0 py-5 pr-4 lg:px-5 lg:first:pl-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
               Atletas activos
             </span>
             <Users size={16} className="text-chalk-faint" />
           </div>
-          <p className="mt-3 font-display text-3xl font-bold text-chalk">
+          <p className="data-number mt-3 text-5xl font-bold text-chalk">
             {atletasActivos.length}
           </p>
         </Card>
 
-        <Card>
+        <Card className="border-0 bg-transparent px-4 py-5 lg:border-r lg:border-chalk lg:px-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
               Entrenamientos pendientes hoy
             </span>
             <Clock size={16} className="text-chalk-faint" />
           </div>
-          <p className="mt-3 font-display text-3xl font-bold text-chalk">
+          <p className="data-number mt-3 text-5xl font-bold text-chalk">
             {pendientesHoy}
           </p>
         </Card>
 
-        <Card>
+        <Card className="border-0 border-r border-t border-chalk bg-transparent px-0 py-5 pr-4 lg:border-t-0 lg:px-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
               Completados hoy
             </span>
             <CheckCircle2 size={16} className="text-success" />
           </div>
-          <p className="mt-3 font-display text-3xl font-bold text-chalk">
+          <p className="data-number mt-3 text-5xl font-bold text-chalk">
             {completadosHoy.length}
           </p>
         </Card>
 
-        <Card>
+        <Card className="border-0 border-t border-chalk bg-transparent px-4 py-5 lg:border-t-0 lg:px-5 lg:last:pr-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
               Sin marca completa
             </span>
             <Crosshair size={16} className="text-accent" />
           </div>
-          <p className="mt-3 font-display text-3xl font-bold text-chalk">
+          <p className="data-number mt-3 text-5xl font-bold text-chalk">
             {atletasSinMarcaCompleta.length}
           </p>
         </Card>
       </div>
 
-      <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-accent/25 bg-accent/5 p-5">
+      <section className="mt-10 flex flex-wrap items-center justify-between gap-5 border-y border-accent bg-red-50 p-5">
         <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-accent/10 p-2.5">
+          <div className="border border-accent bg-surface p-2.5">
             <Crosshair size={18} className="text-accent" />
           </div>
           <div>
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
             .
           </Card>
         ) : (
-          <div className="divide-y divide-border rounded-xl border border-border bg-surface">
+          <div className="divide-y divide-border-strong border-y border-chalk bg-surface">
             {ultimosAtletas.map((a) => (
               <Link
                 key={a.id}

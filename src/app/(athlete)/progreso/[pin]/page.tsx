@@ -78,16 +78,14 @@ export default async function ProgresoPage({
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <header className="flex items-center justify-between border-b border-border px-4 py-4">
+      <header className="flex items-center justify-between border-b border-chalk bg-surface px-4 py-4">
         <div className="flex items-center gap-2">
-          <Dumbbell size={18} className="text-accent" />
-          <span className="font-display text-sm font-bold text-chalk">
-            Mi progreso
-          </span>
+          <span className="font-display text-xl font-bold tracking-[-0.04em] text-chalk">Forja</span>
+          <span className="border-l border-border-strong pl-2 text-sm font-semibold text-chalk-muted">Mi progreso</span>
         </div>
         <Link
           href={`/hoy/${pin}`}
-          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-chalk-muted transition-colors hover:bg-surface hover:text-chalk"
+          className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk"
         >
           <ArrowLeft size={15} />
           Entrenar
@@ -95,22 +93,22 @@ export default async function ProgresoPage({
       </header>
 
       <div className="px-4 py-5">
-        <h1 className="font-display text-xl font-bold text-chalk">
+        <h1 className="font-display text-3xl font-bold tracking-[-0.04em] text-chalk">
           {atleta.nombre} {atleta.apellido}
         </h1>
         <p className="mt-1 text-sm text-chalk-muted">
           Así va tu fuerza semana a semana.
         </p>
 
-        <div className="mt-6 grid grid-cols-3 gap-2">
+        <div className="mt-6 grid grid-cols-3 border-y border-chalk">
           {lifts.map((lift) => {
             const rec = records[lift];
             return (
-              <Card key={lift} className="p-3">
+              <Card key={lift} className="border-0 border-r border-chalk bg-transparent p-3 last:border-r-0">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-chalk-muted">
                   {NOMBRES_LIFT[lift]}
                 </p>
-                <p className="mt-1.5 font-display text-lg font-bold text-chalk">
+                <p className="data-number mt-1.5 text-2xl font-bold text-chalk">
                   {rec ? `${rec.valorKg} kg` : "—"}
                 </p>
                 {rec && (

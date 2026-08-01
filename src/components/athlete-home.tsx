@@ -101,25 +101,23 @@ export function AthleteHome({
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
-      <header className="flex items-center justify-between border-b border-border px-4 py-4">
+    <div className="min-h-screen bg-background pb-32">
+      <header className="flex items-center justify-between border-b border-chalk bg-surface px-4 py-4">
         <div className="flex items-center gap-2">
-          <Dumbbell size={18} className="text-accent" />
-          <span className="font-display text-sm font-bold text-chalk">
-            Hola, {nombre}
-          </span>
+          <span className="font-display text-xl font-bold tracking-[-0.04em] text-chalk">Forja</span>
+          <span className="border-l border-border-strong pl-2 text-sm font-semibold text-chalk-muted">{nombre}</span>
         </div>
         <div className="flex items-center gap-1">
           <Link
             href={`/progreso/${pin}`}
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-chalk-muted transition-colors hover:bg-surface hover:text-chalk"
+            className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk"
           >
             <LineChart size={15} />
             Progreso
           </Link>
           <Link
             href="/hoy"
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-chalk-muted transition-colors hover:bg-surface hover:text-chalk"
+            className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk"
           >
             <LogOut size={15} />
             Salir
@@ -134,10 +132,10 @@ export function AthleteHome({
       ) : (
         <div>
           <div className="px-4 pt-4">
-            <div className="rounded-xl border border-border bg-surface p-4">
+            <div className="competition-sheet border-y border-chalk p-4">
               {proximo && (proximo.completado ? (
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-success bg-surface text-success">
                     <Trophy size={20} />
                   </div>
                   <div>
@@ -151,11 +149,11 @@ export function AthleteHome({
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-accent bg-surface text-accent">
                     <ChevronRight size={20} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-wide text-chalk-muted">
+                    <p className="data-label">
                       Próximo entrenamiento
                     </p>
                     <p className="truncate font-display text-lg font-bold text-chalk">
@@ -167,9 +165,9 @@ export function AthleteHome({
                   </p>
                 </div>
               ))}
-              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border">
+              <div className="mt-3 h-2 w-full overflow-hidden border border-border-strong bg-background">
                 <div
-                  className="h-full rounded-full bg-accent transition-all"
+                  className="h-full bg-accent transition-all"
                   style={{ width: `${progreso * 100}%` }}
                 />
               </div>
@@ -196,7 +194,7 @@ export function AthleteHome({
                       if (diaDeSemana) setSeleccionado(diaDeSemana);
                     }}
                     className={cn(
-                      "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+                      "flex min-h-11 shrink-0 items-center gap-1.5 border px-3.5 py-1.5 text-sm font-semibold transition-colors",
                       activa
                         ? "border-accent bg-accent text-white"
                         : "border-border bg-surface text-chalk-muted hover:text-chalk"
@@ -207,7 +205,7 @@ export function AthleteHome({
                     ) : (
                       <span
                         className={cn(
-                          "h-1.5 w-1.5 rounded-full",
+                          "h-2 w-2",
                           activa ? "bg-white" : "bg-accent"
                         )}
                       />
@@ -226,7 +224,7 @@ export function AthleteHome({
                   key={dia.id}
                   onClick={() => setSeleccionado(dia.id)}
                   className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+                    "flex min-h-11 shrink-0 items-center gap-1.5 border px-3.5 py-1.5 text-sm font-semibold transition-colors",
                     seleccionado === dia.id
                       ? "border-accent/50 bg-accent/10 text-chalk"
                       : dia.completado
@@ -239,7 +237,7 @@ export function AthleteHome({
                   ) : (
                     <span
                       className={cn(
-                        "h-1.5 w-1.5 rounded-full",
+                        "h-2 w-2",
                         seleccionado === dia.id ? "bg-accent" : "bg-chalk-faint"
                       )}
                     />

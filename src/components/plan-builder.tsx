@@ -93,7 +93,7 @@ function SemanaBlock({
   const rango = rangoSemana(fechaInicioSemana(fechaInicio, semana.numero));
 
   return (
-    <div className="rounded-xl border border-border bg-surface">
+    <div className="border-y border-chalk bg-surface">
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-5 py-3.5"
@@ -114,7 +114,7 @@ function SemanaBlock({
       </button>
 
       {open && (
-        <div className="space-y-3 border-t border-border p-5">
+        <div className="space-y-4 border-t border-chalk p-5">
           {semana.days.map((dia) => (
             <DiaBlock key={dia.id} athleteId={athleteId} dia={dia} />
           ))}
@@ -151,7 +151,7 @@ function DiaBlock({ athleteId, dia }: { athleteId: string; dia: Dia }) {
   const [agregando, setAgregando] = useState(false);
 
   return (
-    <div className="rounded-lg border border-border-strong bg-background p-4">
+    <div className="border border-border-strong bg-background p-4">
       <div className="mb-3 flex items-center justify-between">
         <h4 className="text-sm font-semibold text-chalk">{dia.nombre}</h4>
         <button
@@ -211,7 +211,7 @@ function NuevoEjercicioForm({
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-lg border border-border bg-surface p-3">
+    <div className="mt-3 space-y-3 border border-border-strong bg-surface p-3">
       <div className="space-y-2">
         {GRUPOS_CATALOGO.map(({ grupo, titulo }) => (
           <div key={grupo}>
@@ -226,7 +226,7 @@ function NuevoEjercicioForm({
                     type="button"
                     onClick={() => elegirDelCatalogo(ejercicio)}
                     className={cn(
-                      "rounded-full border px-3 py-1 text-xs transition-colors",
+                      "min-h-9 border px-3 py-1 text-xs font-semibold transition-colors",
                       nombre === ejercicio.nombre
                         ? "border-accent bg-accent text-white"
                         : "border-border-strong bg-background text-chalk-muted hover:border-accent hover:text-accent"
@@ -294,7 +294,7 @@ function EjercicioBlock({
   const [agregandoSet, setAgregandoSet] = useState(false);
 
   return (
-    <div className="rounded-lg bg-surface p-3">
+    <div className="border-t border-border-strong bg-surface p-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-chalk">{ejercicio.nombre}</p>
         <button
@@ -382,7 +382,7 @@ function NuevoSetForm({
         await crearSet(exerciseId, athleteId, formData);
         onDone();
       }}
-      className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-border p-3 sm:grid-cols-5"
+      className="mt-2 grid grid-cols-2 gap-2 border border-border-strong p-3 sm:grid-cols-5"
     >
       <Input
         name="cantidad"
@@ -403,7 +403,7 @@ function NuevoSetForm({
         onChange={(e) =>
           setPesoTipo(e.target.value as "absoluto" | "porcentaje_rm")
         }
-        className="rounded-lg border border-border bg-surface px-2 text-sm text-chalk"
+        className="border border-border-strong bg-surface px-2 text-sm text-chalk"
       >
         <option value="absoluto">Kg</option>
         <option value="porcentaje_rm">% RM</option>

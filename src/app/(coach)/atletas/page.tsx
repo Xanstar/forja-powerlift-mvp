@@ -17,10 +17,10 @@ export default async function AtletasPage() {
   });
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-chalk">
+          <h1 className="font-display text-4xl font-bold tracking-[-0.04em] text-chalk">
             Atletas
           </h1>
           <p className="mt-1 text-sm text-chalk-muted">
@@ -43,7 +43,7 @@ export default async function AtletasPage() {
       </div>
 
       {misAtletas.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-border-strong p-12 text-center">
+        <div className="mt-8 border border-dashed border-border-strong bg-surface p-12 text-center">
           <p className="text-sm text-chalk-muted">
             Todavía no cargaste ningún atleta. Empezá agregando el primero.
           </p>
@@ -54,12 +54,12 @@ export default async function AtletasPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 divide-y divide-border-strong border-y border-chalk bg-surface">
           {misAtletas.map((a) => (
             <Link
               key={a.id}
               href={`/atletas/${a.id}`}
-              className="rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-hover"
+              className="block px-4 py-5 transition-colors hover:bg-surface-hover sm:px-5"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -74,8 +74,8 @@ export default async function AtletasPage() {
                 <span
                   className={
                     a.estado === "activo"
-                      ? "rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success"
-                      : "rounded-full bg-chalk-faint/10 px-2 py-0.5 text-[10px] font-medium text-chalk-faint"
+                      ? "competition-stamp border-success text-success"
+                      : "competition-stamp border-chalk-faint text-chalk-faint"
                   }
                 >
                   {a.estado === "activo" ? "Activo" : "Inactivo"}

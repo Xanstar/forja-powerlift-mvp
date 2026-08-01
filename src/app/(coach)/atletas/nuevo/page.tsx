@@ -6,18 +6,18 @@ import { ArrowLeft } from "lucide-react";
 
 export default function NuevoAtletaPage() {
   return (
-    <div className="max-w-lg">
+    <div className="max-w-2xl">
       <Link
         href="/atletas"
         className="mb-4 flex items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
       >
         <ArrowLeft size={14} /> Atletas
       </Link>
-      <h1 className="font-display text-2xl font-bold tracking-tight text-chalk">
+      <h1 className="font-display text-4xl font-bold tracking-[-0.04em] text-chalk">
         Nuevo atleta
       </h1>
 
-      <form action={crearAtleta} className="mt-6 space-y-4">
+      <form action={crearAtleta} className="competition-sheet mt-8 space-y-5 border-y border-chalk p-5 sm:p-7">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="nombre">Nombre</Label>
@@ -67,7 +67,7 @@ export default function NuevoAtletaPage() {
             <select
               id="sexo"
               name="sexo"
-              className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-accent"
+              className="w-full border border-border-strong bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-steel"
               defaultValue=""
             >
               <option value="">Sin especificar</option>
@@ -100,7 +100,7 @@ export default function NuevoAtletaPage() {
             id="notas"
             name="notas"
             rows={3}
-            className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-chalk placeholder:text-chalk-faint outline-none transition-colors focus:border-accent"
+            className="w-full border border-border-strong bg-surface px-3.5 py-2.5 text-sm text-chalk placeholder:text-chalk-faint outline-none transition-colors focus:border-steel"
             placeholder="Lesiones, objetivos, contexto general..."
           />
         </div>

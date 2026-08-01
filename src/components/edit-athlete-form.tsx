@@ -33,7 +33,7 @@ export function EditAthleteForm({ atleta }: { atleta: Atleta }) {
         router.refresh();
         setTimeout(() => setGuardado(false), 2000);
       }}
-      className="max-w-lg space-y-4"
+      className="competition-sheet max-w-2xl space-y-5 border-y border-chalk p-5 sm:p-7"
     >
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -99,7 +99,7 @@ export function EditAthleteForm({ atleta }: { atleta: Atleta }) {
             id="sexo"
             name="sexo"
             defaultValue={atleta.sexo ?? ""}
-            className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-accent"
+            className="w-full border border-border-strong bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-steel"
           >
             <option value="">Sin especificar</option>
             <option value="masculino">Masculino</option>
@@ -135,7 +135,7 @@ export function EditAthleteForm({ atleta }: { atleta: Atleta }) {
             id="estado"
             name="estado"
             defaultValue={atleta.estado}
-            className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-accent"
+            className="w-full border border-border-strong bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-steel"
           >
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
@@ -150,7 +150,7 @@ export function EditAthleteForm({ atleta }: { atleta: Atleta }) {
           name="notas"
           rows={3}
           defaultValue={atleta.notas ?? ""}
-          className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-accent"
+          className="w-full border border-border-strong bg-surface px-3.5 py-2.5 text-sm text-chalk outline-none focus:border-steel"
         />
       </div>
 

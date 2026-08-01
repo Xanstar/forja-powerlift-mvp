@@ -84,7 +84,7 @@ export default async function HistorialPage({
         <ArrowLeft size={14} /> {atleta.nombre} {atleta.apellido}
       </Link>
 
-      <h1 className="font-display text-2xl font-bold tracking-tight text-chalk">
+      <h1 className="font-display text-4xl font-bold tracking-[-0.04em] text-chalk">
         Historial de progreso
       </h1>
       <p className="mt-1 text-sm text-chalk-muted">
@@ -97,7 +97,7 @@ export default async function HistorialPage({
             <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
               Total (S+B+P)
             </p>
-            <p className="mt-2 font-display text-2xl font-bold text-chalk">
+            <p className="data-number mt-2 text-3xl font-bold text-chalk">
               {total} kg
             </p>
           </Card>
@@ -105,7 +105,7 @@ export default async function HistorialPage({
             <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
               Puntaje Wilks
             </p>
-            <p className="mt-2 font-display text-2xl font-bold text-chalk">
+            <p className="data-number mt-2 text-3xl font-bold text-chalk">
               {puntajeWilks(total, atleta.pesoCorporal!, atleta.sexo!)}
             </p>
           </Card>
@@ -113,7 +113,7 @@ export default async function HistorialPage({
             <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
               IPF GL Points
             </p>
-            <p className="mt-2 font-display text-2xl font-bold text-chalk">
+            <p className="data-number mt-2 text-3xl font-bold text-chalk">
               {puntajeIpfGl(total, atleta.pesoCorporal!, atleta.sexo!)}
             </p>
           </Card>

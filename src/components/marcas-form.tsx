@@ -129,12 +129,12 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
       </div>
 
       {resultado && (
-        <div className="flex items-center gap-2 rounded-lg border border-success/30 bg-success/10 px-3.5 py-2.5 text-sm text-success">
+        <div className="flex items-center gap-2 border border-success bg-green-50 px-3.5 py-2.5 text-sm font-medium text-success">
           <CheckCircle2 size={16} /> {resultado}
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+      <div className="overflow-x-auto border-y border-chalk bg-surface">
         <table className="w-full min-w-[880px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-chalk-muted">
@@ -202,13 +202,13 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
                       onChange={(e) =>
                         setFila(a.id, { tipo: e.target.value as "real" | "estimado" })
                       }
-                      className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-chalk"
+                      className="border border-border-strong bg-background px-2 py-1.5 text-xs text-chalk"
                     >
                       <option value="real">Real</option>
                       <option value="estimado">Estimado</option>
                     </select>
                   </td>
-                  <td className="px-2 py-2.5 font-display font-bold text-chalk">
+                  <td className="data-number px-2 py-2.5 text-lg font-bold text-chalk">
                     {total > 0 ? fmtKg(total) : "—"}
                   </td>
                   <td className="px-2 py-2.5 text-chalk-muted">

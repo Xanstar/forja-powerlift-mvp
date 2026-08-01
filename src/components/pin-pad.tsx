@@ -62,7 +62,7 @@ export function PinPad() {
       type="button"
       onClick={onPress}
       disabled={isPending}
-      className="flex h-16 select-none items-center justify-center rounded-xl border border-border bg-surface text-xl font-medium text-chalk transition-colors hover:bg-surface-hover active:bg-surface-hover disabled:opacity-40 sm:h-[72px]"
+      className="data-number flex h-16 select-none items-center justify-center border border-border-strong bg-surface text-2xl font-bold text-chalk transition-colors hover:border-chalk hover:bg-surface-hover active:bg-chalk active:text-white disabled:opacity-40 sm:h-[72px]"
     >
       {label}
     </button>
@@ -80,7 +80,7 @@ export function PinPad() {
           <span
             key={i}
             className={cn(
-              "h-3.5 w-3.5 rounded-full border transition-colors",
+              "h-4 w-8 border transition-colors",
               i < pin.length
                 ? "border-accent bg-accent"
                 : error
@@ -109,7 +109,7 @@ export function PinPad() {
           type="button"
           onClick={borrar}
           disabled={isPending}
-          className="flex h-16 select-none items-center justify-center rounded-xl border border-border bg-surface text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk active:bg-surface-hover disabled:opacity-40 sm:h-[72px]"
+          className="flex h-16 select-none items-center justify-center border border-border-strong bg-surface text-chalk-muted transition-colors hover:border-chalk hover:bg-surface-hover hover:text-chalk active:bg-chalk active:text-white disabled:opacity-40 sm:h-[72px]"
           aria-label="Borrar"
         >
           <Delete size={22} />

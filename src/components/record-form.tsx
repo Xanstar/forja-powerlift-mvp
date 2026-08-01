@@ -23,12 +23,12 @@ export function RecordForm({ athleteId }: { athleteId: string }) {
         await crearRecord(athleteId, formData);
         setOpen(false);
       }}
-      className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface p-3 sm:grid-cols-4"
+      className="grid grid-cols-2 gap-2 border-y border-chalk bg-surface p-3 sm:grid-cols-4"
     >
       <select
         name="lift"
         required
-        className="rounded-lg border border-border bg-background px-2 text-sm text-chalk"
+        className="border border-border-strong bg-background px-2 text-sm text-chalk"
       >
         <option value="sentadilla">Sentadilla</option>
         <option value="banca">Press Banca</option>
@@ -37,7 +37,7 @@ export function RecordForm({ athleteId }: { athleteId: string }) {
       <Input name="valorKg" type="number" step="0.5" placeholder="Kg" required />
       <select
         name="tipo"
-        className="rounded-lg border border-border bg-background px-2 text-sm text-chalk"
+        className="border border-border-strong bg-background px-2 text-sm text-chalk"
       >
         <option value="estimado">Estimado</option>
         <option value="real">Real (competencia)</option>

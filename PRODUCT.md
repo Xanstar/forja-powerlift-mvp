@@ -58,13 +58,14 @@ Decisiones abiertas:
 - Reglas mínimas de desviación que deben ingresar a la bandeja del coach durante el piloto.
 - Si la publicación de un plan es inmutable o admite versionado explícito después del piloto.
 - Fecha de retirada del PIN heredado y política de migración de atletas.
-- Marca y dirección visual definitivas; requieren un taller independiente de dirección con el usuario antes de cualquier rediseño integral de la aplicación.
+- La evolución futura de la identidad podrá refinar detalles, pero debe conservar la dirección visual aprobada y documentada en DESIGN.md.
 
 ## Compromisos de marca
 
 - El nombre del producto es **Forja**.
 - La comunicación del producto debe ser directa, operativa y basada en la práctica del powerlifting.
-- No se aprobó una identidad visual definitiva para toda la aplicación.
+- Forja es la marca principal; la identidad del gimnasio o tenant es secundaria.
+- La dirección visual aprobada es “Sala de competencia”: superficies minerales claras, azul reglamentario, rojo de decisión, reglas nítidas, estados sellados y composición basada en evidencia.
 
 ## Evidencia disponible
 

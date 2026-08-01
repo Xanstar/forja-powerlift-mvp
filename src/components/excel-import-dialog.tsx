@@ -59,7 +59,7 @@ export function ExcelImportDialog() {
       </Button>
 
       {open && (
-        <div className="mt-4 rounded-xl border border-border bg-surface p-5">
+        <div className="mt-4 border-y border-chalk bg-surface p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-display text-sm font-semibold text-chalk">
@@ -73,7 +73,7 @@ export function ExcelImportDialog() {
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="rounded-lg p-1 text-chalk-faint hover:bg-surface-hover hover:text-chalk"
+              className="min-h-11 min-w-11 p-1 text-chalk-faint hover:bg-surface-hover hover:text-chalk"
             >
               <X size={16} />
             </button>
@@ -89,7 +89,7 @@ export function ExcelImportDialog() {
                 setError(null);
                 setArchivo(e.target.files?.[0] ?? null);
               }}
-              className="max-w-full text-sm text-chalk-muted file:mr-3 file:rounded-lg file:border file:border-border-strong file:bg-background file:px-3 file:py-1.5 file:text-sm file:text-chalk hover:file:bg-surface-hover"
+              className="max-w-full text-sm text-chalk-muted file:mr-3 file:border file:border-border-strong file:bg-background file:px-3 file:py-1.5 file:text-sm file:text-chalk hover:file:bg-surface-hover"
             />
             <Button onClick={importar} disabled={!archivo || cargando}>
               {cargando ? (
@@ -103,20 +103,20 @@ export function ExcelImportDialog() {
             <a
               href="/api/export/plantilla-atletas"
               download
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-chalk-muted hover:text-chalk"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-chalk-muted hover:text-chalk"
             >
               <FileDown size={14} /> Descargar plantilla
             </a>
           </div>
 
           {error && (
-            <p className="mt-3 flex items-start gap-2 rounded-lg bg-accent/10 px-3 py-2.5 text-sm text-accent">
+            <p className="mt-3 flex items-start gap-2 border border-accent bg-red-50 px-3 py-2.5 text-sm text-accent">
               <AlertCircle size={15} className="mt-0.5 shrink-0" /> {error}
             </p>
           )}
 
           {resultado && (
-            <div className="mt-3 space-y-2 rounded-lg bg-background p-3 text-sm">
+            <div className="mt-3 space-y-2 border border-success bg-green-50 p-3 text-sm">
               <p className="flex items-center gap-2 font-medium text-success">
                 <CheckCircle2 size={15} /> Importación completada
               </p>

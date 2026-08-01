@@ -9,7 +9,7 @@ export const Input = forwardRef<
     <input
       ref={ref}
       className={cn(
-        "w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-chalk placeholder:text-chalk-faint outline-none transition-colors focus:border-accent",
+        "w-full border border-border-strong bg-surface px-3.5 py-2.5 text-sm text-chalk placeholder:text-chalk-faint outline-none transition-colors focus:border-steel focus:ring-1 focus:ring-steel",
         className
       )}
       {...props}
@@ -25,7 +25,7 @@ export function Label({
   return (
     <label
       className={cn(
-        "mb-1.5 block text-xs font-medium uppercase tracking-wide text-chalk-muted",
+        "mb-1.5 block text-sm font-semibold text-chalk",
         className
       )}
       {...props}
