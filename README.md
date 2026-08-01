@@ -1,84 +1,117 @@
-# Forja — MVP de planificación para entrenadores de powerlifting
+# Forja
 
-## Cómo correrlo
+MVP de planificación y seguimiento para entrenadores de powerlifting. Incluye gestión de atletas, programas y marcas, una vista móvil por PIN y soporte PWA para registrar entrenamientos con conectividad limitada.
 
-Requisitos: Node.js 20+.
+> **Estado actual:** prototipo funcional para desarrollo y demostraciones. No está listo para datos reales ni para producción; consultá [Seguridad y despliegue](#seguridad-y-despliegue) antes de exponerlo.
+
+## Inicio rápido
+
+### Requisitos
+
+| Herramienta | Versión |
+| --- | --- |
+| Node.js | `>=22.13.0` |
+| pnpm | `11.1.1` (`>=11.1.1 <12`) |
+
+Next.js 16.2.12 requiere Node.js 20.9 como mínimo, pero pnpm 11.1.1 eleva el mínimo efectivo del proyecto a Node.js 22.13.
+
+### Preparar y ejecutar
 
 ```bash
-npm install
-npm run db:migrate   # crea sqlite.db con el schema
-npm run db:seed      # carga datos de demo (opcional pero recomendado)
-npm run dev
+pnpm install --frozen-lockfile
+cp .env.example .env
+pnpm db:migrate
+pnpm db:seed
+pnpm dev
 ```
 
-Abrí `http://localhost:3000`.
+Antes de iniciar, reemplazá `AUTH_SECRET` en `.env` por un valor aleatorio. Podés generarlo sin dependencias adicionales:
 
-### Credenciales de demo
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
+```
 
-- **Entrenador:** `admin` / `admin`
-- **Atleta (vista por celular, sin cuenta):** entrá a `http://localhost:3000/hoy/1111`
-  (PIN de Martina Gómez, con un día ya completado y un "Día B" pendiente para probar el logging)
+Abrí `http://localhost:3000`. El seed crea el entrenador definido por `ADMIN_EMAIL` y `ADMIN_PASSWORD`, además de una atleta de demostración accesible en `http://localhost:3000/hoy/1111`.
 
-## Qué hay hecho
+> `pnpm db:seed` agrega datos y no es idempotente. Ejecutalo una sola vez sobre una base vacía.
 
-- Auth de entrenador (un solo admin por instancia — no hay auto-registro)
-- Dashboard con métricas reales (atletas activos, pendientes/completados hoy)
-- CRUD de atletas completo
-- Constructor de planificación: Programa → Semana → Día → Ejercicio → Sets individuales
-  (peso absoluto o % de RM, RPE objetivo)
-- Récords de 1RM por atleta (sentadilla/banca/peso muerto) + Wilks y IPF GL Points calculados en el historial
-- **Toma de marcas** (`/marcas`): pesaje + los tres levantamientos en una sola pantalla, con Wilks e IPF GL calculados en vivo; acceso directo desde el dashboard
-- **Excel**: importar atletas desde la planilla del gimnasio (con sus marcas), exportar atletas + historial de marcas a Excel, y plantilla descargable
-- Vista del atleta por PIN (sin cuenta), con logging de sets, pensada para el celular en el gimnasio
-- PWA offline-first: la vista del atleta cachea la rutina y encola los sets registrados sin señal,
-  sincronizando solos cuando vuelve la conexión
-- Historial con gráfico de evolución de cargas por ejercicio
-- **UX de entrenamiento**: check de un toque por serie (online u offline), timer de descanso
-  automático al completar una serie (barra fija con cuenta regresiva y vibración), "última vez"
-  con la sesión anterior por ejercicio, auto-scroll a la próxima serie pendiente y
-  navegación por días con fade lateral
-- **Ejercicios normalizados**: los nombres se guardan y comparan sin importar mayúsculas/espacios
-  ("SENTADILLA" y "Sentadilla" son el mismo ejercicio para "última vez" e historial)
-- **Libreta plan vs. hecho**: cuando el atleta entrena más pesado/liviano que lo planeado,
-  la serie se resalta y muestra "Hecho: 50kg × 6 @ RPE 7 · plan 47kg · plan 5 reps"
-- **Calendario**: la vista del atleta muestra la semana dentro del mes (1-4) con el día/mes real
-  ("Sem 4 · 27 jul", "Semana 4 de julio · Estás acá") en vez de la semana global del programa;
-  cada programa nuevo arranca desde el lunes que elija el entrenador
+## Entorno
 
-## Decisiones de arquitectura (por qué)
+Copiá `.env.example` a `.env` y ajustá solo lo necesario. Nunca confirmes `.env` ni secretos reales.
 
-- **Next.js 16 (App Router) + TypeScript + Tailwind v4**: velocidad de desarrollo del MVP,
-  Server Actions elimina la necesidad de una API separada.
-- **Drizzle ORM + libSQL (SQLite)** en vez de Prisma: mismo nivel de tipado y control
-  sobre el modelo relacional, con binarios precompilados (sin Python/Visual Studio/node-gyp
-  necesarios en Windows). Migrar a Postgres para producción es cambiar el cliente en
-  `src/db/index.ts` — el schema en Drizzle es portable entre motores.
-- **Sets individuales, no un campo plano por ejercicio**: cada serie tiene su propio peso/reps/RPE,
-  necesario para representar top sets y back-off sets reales de powerlifting.
-- **Jerarquía Programa → Semana → Día → Ejercicio → Set**: el agrupador "Programa" está para no
-  tener que migrar cuando el entrenador empiece a pensar en mesociclos/bloques.
-- **Vista del atleta por PIN, no por cuenta**: fricción cero para usar en el momento del entrenamiento.
-- **PWA offline-first**: la vista del atleta se usa en sótanos de gimnasio con señal pésima; perder
-  el registro del día por falta de conexión es el peor escenario posible para este producto.
-- **Sin facturación/mensualidades en el MVP**: decisión de producto — diluye el foco y agrega
-  complejidad legal/fiscal que no aporta al problema que se está resolviendo.
+| Variable | Uso | Requerida |
+| --- | --- | --- |
+| `AUTH_SECRET` | Firma y cifrado de Auth.js | Sí; especialmente en producción |
+| `DATABASE_URL` | URL de libSQL; `file:./sqlite.db` usa SQLite local | No, tiene fallback local |
+| `TURSO_AUTH_TOKEN` | Token para una base remota Turso | Solo con Turso |
+| `APP_NAME` | Nombre visible de la instancia | No |
+| `ADMIN_NOMBRE` | Nombre del entrenador creado por el seed | No |
+| `ADMIN_EMAIL` | Usuario creado por el seed | No |
+| `ADMIN_PASSWORD` | Contraseña creada por el seed | No |
 
-## Lo que falta para producción
+Los valores predeterminados del seed son solo para desarrollo. Cambiá `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `AUTH_SECRET` antes de usar un entorno compartido.
 
-1. Migrar de SQLite a Postgres (Neon/Supabase) para despliegue multi-tenant real
-2. Rate limiting en el acceso por PIN del atleta (hoy es un PIN de 4 dígitos sin límite de intentos)
-3. Deploy (Vercel es la opción más directa para este stack)
+## Base de datos
 
-## Modelo de producto: una instancia por gimnasio
+El proyecto usa Drizzle ORM con libSQL/SQLite y conserva las migraciones en `drizzle/`.
 
-La app **no tiene auto-registro**: cada deploy es la app "personificada" de un solo
-gimnasio/entrenador, con su propio nombre, su propio link y su propia base de datos.
-Lo que cambia entre gimnasios son variables de entorno:
+```bash
+pnpm db:migrate  # aplica las migraciones de drizzle/
+pnpm db:seed     # carga entrenador, atleta y rutina de demostración
+```
 
-- `APP_NAME` — nombre que se muestra en la landing, el login y la PWA instalada
-- `ADMIN_NOMBRE`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` — credenciales del admin (se aplican con `db:seed`)
-- `DATABASE_URL`, `TURSO_AUTH_TOKEN` — la base de datos Turso de ese gimnasio
+Para desarrollo local, `DATABASE_URL=file:./sqlite.db` crea `sqlite.db` en la raíz. Para Turso, reemplazá `DATABASE_URL` por la URL remota y definí `TURSO_AUTH_TOKEN`; verificá el destino antes de migrar o sembrar datos.
 
-Para crear la instancia de un gimnasio nuevo: clonar este repo, crear su base en Turso,
-correr `db:migrate` + `db:seed` contra esa base, y deployar a un proyecto Vercel propio
-con esas env vars. Los atletas entran por PIN, sin cuenta.
+## Comandos
+
+| Comando | Propósito |
+| --- | --- |
+| `pnpm dev` | Inicia Next.js en desarrollo |
+| `pnpm build` | Genera el build de producción |
+| `pnpm start` | Sirve un build ya generado |
+| `pnpm db:migrate` | Aplica migraciones con el `.env` local |
+| `pnpm db:seed` | Inserta los datos de demostración |
+
+El repositorio no define actualmente scripts de lint, typecheck aislado ni tests automatizados.
+
+## Capacidades
+
+- Autenticación de un entrenador por instancia, sin auto-registro.
+- Dashboard, CRUD de atletas e importación/exportación Excel.
+- Programación por programa, semana, día, ejercicio y series individuales.
+- Registro de marcas, historial y cálculos Wilks/IPF GL.
+- Vista móvil del atleta por PIN y cola offline para registrar series.
+- PWA con rutina cacheada y sincronización al recuperar conexión.
+
+## Arquitectura
+
+| Área | Responsabilidad |
+| --- | --- |
+| `src/app/` | Rutas App Router para entrenador, atleta y endpoints HTTP |
+| `src/components/` | Formularios, vistas de entrenamiento y componentes UI |
+| `src/lib/actions/` | Server Actions de atletas, planificación, marcas y registros |
+| `src/lib/` | Auth.js, consultas, cálculo, Excel y soporte offline |
+| `src/db/` | Cliente libSQL, esquema Drizzle, migración y seed |
+| `drizzle/` | Migraciones SQL versionadas |
+| `public/` | Manifest, iconos y service worker de la PWA |
+
+El modelo principal sigue la jerarquía Programa -> Semana -> Día -> Ejercicio -> Serie planificada. Cada despliegue representa hoy un gimnasio o entrenador con su propia base de datos.
+
+## Seguridad y despliegue
+
+No uses este estado del repositorio con información real de atletas. Antes de producción, como mínimo:
+
+- Corregí las Server Actions que todavía no validan autorización y pertenencia de recursos.
+- Fortalecé el acceso por PIN y agregá rate limiting; el PIN actual es corto y no limita intentos.
+- Reemplazá todas las credenciales de demostración y configurá secretos solo en el proveedor.
+- Revisá las vulnerabilidades conocidas de dependencias con `pnpm audit --prod`.
+- Definí una estrategia de base de datos, backups y aislamiento acorde al despliegue.
+
+El build de Next.js puede ejecutarse como servidor Node.js mediante `pnpm build` y `pnpm start`. Un despliegue remoto requiere `AUTH_SECRET`, la conexión de base correspondiente y, si el proveedor no confía automáticamente en el host, `AUTH_TRUST_HOST=true`.
+
+## Limitaciones de calidad
+
+- No hay suite de tests, script de lint, script de typecheck dedicado ni CI configurada.
+- La comprobación automatizada disponible es el build de producción.
+- El seed no se puede repetir de forma segura sobre la misma base.
+- La seguridad y la preparación para datos reales siguen pendientes y quedan fuera de esta migración de tooling/documentación.
