@@ -1,11 +1,14 @@
 "use server";
 
-import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { athletes, records } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { LIFTS, type Lift } from "@/lib/queries";
+import {
+  requireCoachId,
+  requireCoachResourceAs,
+} from "@/lib/server-authorization";
 
 export type FilaMarca = {
   athleteId: string;
@@ -30,16 +33,24 @@ export async function guardarMarcas(
   fecha: string,
   filas: FilaMarca[]
 ): Promise<ResultadoMarcas> {
-  const session = await auth();
-  if (!session?.user) throw new Error("No autorizado.");
-  const coachId = (session.user as { id: string }).id;
+  const coachId = await requireCoachId();
 
   const fechaDate = fecha ? new Date(`${fecha}T12:00:00`) : new Date();
+
+  const procesables = filas.filter((f) => {
+    const tienePeso = parseKg(f.peso) != null;
+    return tienePeso || LIFTS.some((lift) => parseKg(f[lift]) != null);
+  });
+  await Promise.all(
+    procesables.map((f) =>
+      requireCoachResourceAs(coachId, "athlete", f.athleteId)
+    )
+  );
 
   let guardadas = 0;
   let atletasActualizados = 0;
 
-  for (const f of filas) {
+  for (const f of procesables) {
     const peso = parseKg(f.peso);
     const valores: { lift: Lift; valorKg: number }[] = [];
     for (const lift of LIFTS) {
@@ -49,22 +60,17 @@ export async function guardarMarcas(
 
     if (peso == null && valores.length === 0) continue;
 
-    const atleta = await db.query.athletes.findFirst({
-      where: and(eq(athletes.id, f.athleteId), eq(athletes.coachId, coachId)),
-    });
-    if (!atleta) continue;
-
     if (peso != null) {
       await db
         .update(athletes)
         .set({ pesoCorporal: peso })
-        .where(eq(athletes.id, atleta.id));
+        .where(eq(athletes.id, f.athleteId));
     }
 
     if (valores.length > 0) {
       await db.insert(records).values(
         valores.map((v) => ({
-          athleteId: atleta.id,
+          athleteId: f.athleteId,
           lift: v.lift,
           valorKg: v.valorKg,
           tipo: f.tipo,
@@ -75,8 +81,8 @@ export async function guardarMarcas(
     }
 
     atletasActualizados += 1;
-    revalidatePath(`/atletas/${atleta.id}`);
-    revalidatePath(`/atletas/${atleta.id}/historial`);
+    revalidatePath(`/atletas/${f.athleteId}`);
+    revalidatePath(`/atletas/${f.athleteId}/historial`);
   }
 
   revalidatePath("/marcas");

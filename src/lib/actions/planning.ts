@@ -10,9 +10,13 @@ import {
   dayCompletions,
   setLogs,
 } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { capitalizarNombre } from "@/lib/nombres";
+import {
+  requireAthleteResource,
+  requireCoachResource,
+} from "@/lib/server-authorization";
 
 export async function crearPrograma(
   athleteId: string,
@@ -20,6 +24,7 @@ export async function crearPrograma(
   semanas = 4,
   fechaInicio?: Date
 ) {
+  await requireCoachResource("athlete", athleteId);
   // Desactiva programas anteriores: en el MVP solo hay un programa activo por vez
   await db
     .update(programs)
@@ -49,6 +54,7 @@ export async function crearDia(
   athleteId: string,
   nombre: string
 ) {
+  await requireCoachResource("week", weekId, athleteId);
   const existentes = await db.query.days.findMany({
     where: eq(days.weekId, weekId),
   });
@@ -65,6 +71,7 @@ export async function crearEjercicio(
   athleteId: string,
   formData: FormData
 ) {
+  await requireCoachResource("day", dayId, athleteId);
   const nombre = formData.get("nombre") as string;
   const descanso = formData.get("descanso") as string;
   const observaciones = formData.get("observaciones") as string;
@@ -94,6 +101,7 @@ export async function crearSet(
   athleteId: string,
   formData: FormData
 ) {
+  await requireCoachResource("exercise", exerciseId, athleteId);
   const repeticionesObjetivo = parseInt(
     formData.get("repeticionesObjetivo") as string,
     10
@@ -126,11 +134,13 @@ export async function crearSet(
 }
 
 export async function eliminarEjercicio(exerciseId: string, athleteId: string) {
+  await requireCoachResource("exercise", exerciseId, athleteId);
   await db.delete(exercises).where(eq(exercises.id, exerciseId));
   revalidatePath(`/atletas/${athleteId}`);
 }
 
 export async function eliminarDia(dayId: string, athleteId: string) {
+  await requireCoachResource("day", dayId, athleteId);
   await db.delete(days).where(eq(days.id, dayId));
   revalidatePath(`/atletas/${athleteId}`);
 }
@@ -145,6 +155,7 @@ export async function registrarSet(
   },
   revalidateAthleteId?: string
 ) {
+  await requireAthleteResource("plannedSet", plannedSetId);
   const existente = await db.query.setLogs.findFirst({
     where: eq(setLogs.plannedSetId, plannedSetId),
     orderBy: [desc(setLogs.completadoEn)],
@@ -168,7 +179,8 @@ export async function registrarSet(
   }
 }
 
-export async function completarDia(dayId: string, pin: string) {
+export async function completarDia(dayId: string) {
+  await requireAthleteResource("day", dayId);
   await db.insert(dayCompletions).values({ dayId });
-  revalidatePath(`/hoy/${pin}`);
+  revalidatePath("/hoy");
 }

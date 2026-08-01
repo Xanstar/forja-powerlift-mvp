@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import {
-  athletes,
   programs,
   weeks,
   days,
@@ -16,6 +15,7 @@ import {
   etiquetaSemana,
 } from "@/lib/calendario";
 import { normalizarNombre, capitalizarNombre } from "@/lib/nombres";
+import { athleteForAccessPin } from "@/lib/server-authorization";
 
 type LogHistorico = {
   dayId: string;
@@ -32,9 +32,7 @@ export default async function HoyPage({
 }) {
   const { pin } = await params;
 
-  const atleta = await db.query.athletes.findFirst({
-    where: eq(athletes.accessPin, pin),
-  });
+  const atleta = await athleteForAccessPin(pin);
   if (!atleta) notFound();
 
   const programaActivo = await db.query.programs.findFirst({

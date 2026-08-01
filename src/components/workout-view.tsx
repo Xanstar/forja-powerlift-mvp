@@ -102,13 +102,11 @@ function compararConPlan(
 export function WorkoutView({
   dia,
   etiquetaSemana,
-  pin,
   completado = false,
   onCompletado,
 }: {
   dia: Dia;
   etiquetaSemana: string;
-  pin: string;
   completado?: boolean;
   onCompletado?: () => void;
 }) {
@@ -289,7 +287,7 @@ export function WorkoutView({
           size="lg"
           onClick={() =>
             startTransition(async () => {
-              await completarDia(dia.id, pin);
+              await completarDia(dia.id);
               setTerminado(true);
               onCompletado?.();
             })
