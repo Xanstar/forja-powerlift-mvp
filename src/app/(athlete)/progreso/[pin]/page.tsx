@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { athletes, programs, days, weeks, exercises, plannedSets, setLogs } from "@/db/schema";
+import { programs, days, weeks, exercises, plannedSets, setLogs } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { ArrowLeft, Dumbbell } from "lucide-react";
 import { EvolutionChart } from "@/components/evolution-chart";
@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { ultimosRecords } from "@/lib/actions/records";
 import { puntajeWilks, puntajeIpfGl, totalDesdeRecords } from "@/lib/scoring";
 import { normalizarNombre, capitalizarNombre } from "@/lib/nombres";
+import { athleteForAccessPin } from "@/lib/server-authorization";
 
 const NOMBRES_LIFT: Record<string, string> = {
   sentadilla: "Sentadilla",
@@ -23,9 +24,7 @@ export default async function ProgresoPage({
 }) {
   const { pin } = await params;
 
-  const atleta = await db.query.athletes.findFirst({
-    where: eq(athletes.accessPin, pin),
-  });
+  const atleta = await athleteForAccessPin(pin);
   if (!atleta) notFound();
 
   const rows = await db

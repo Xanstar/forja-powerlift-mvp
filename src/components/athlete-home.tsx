@@ -255,7 +255,6 @@ export function AthleteHome({
               <WorkoutView
                 dia={diaActual}
                 etiquetaSemana={diaActual.etiquetaSemana}
-                pin={pin}
                 completado={diaActual.completado}
                 onCompletado={() => marcarCompletado(diaActual.id)}
               />

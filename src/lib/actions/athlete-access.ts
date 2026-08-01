@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { athletes } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { establishAthleteAccess } from "@/lib/server-authorization";
 
 export async function verificarPinAtleta(pin: string): Promise<
   | { ok: true; nombre: string }
@@ -21,5 +22,6 @@ export async function verificarPinAtleta(pin: string): Promise<
     return { ok: false, error: "PIN incorrecto, probá de nuevo." };
   }
 
+  await establishAthleteAccess(atleta.id);
   return { ok: true, nombre: atleta.nombre };
 }

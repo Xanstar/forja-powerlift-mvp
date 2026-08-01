@@ -1,19 +1,19 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { randomInt } from "node:crypto";
 import { db } from "@/db";
 import { athletes } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireCoachId } from "@/lib/server-authorization";
 
 function generarPin() {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return randomInt(1000, 10_000).toString();
 }
 
 export async function crearAtleta(formData: FormData) {
-  const session = await auth();
-  const coachId = (session!.user as { id: string }).id;
+  const coachId = await requireCoachId();
 
   const nombre = formData.get("nombre") as string;
   const apellido = formData.get("apellido") as string;
@@ -45,8 +45,7 @@ export async function crearAtleta(formData: FormData) {
 }
 
 export async function actualizarAtleta(atletaId: string, formData: FormData) {
-  const session = await auth();
-  const coachId = (session!.user as { id: string }).id;
+  const coachId = await requireCoachId();
 
   const nombre = formData.get("nombre") as string;
   const apellido = formData.get("apellido") as string;
@@ -77,8 +76,7 @@ export async function actualizarAtleta(atletaId: string, formData: FormData) {
 }
 
 export async function eliminarAtleta(atletaId: string) {
-  const session = await auth();
-  const coachId = (session!.user as { id: string }).id;
+  const coachId = await requireCoachId();
 
   await db
     .delete(athletes)
