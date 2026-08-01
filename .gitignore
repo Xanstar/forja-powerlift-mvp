@@ -51,6 +51,9 @@ dev-server.err.log
 # vercel
 .vercel
 
+# generated agent skill registry
+/.atl/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
