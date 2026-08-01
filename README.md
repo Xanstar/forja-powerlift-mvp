@@ -71,8 +71,9 @@ Para desarrollo local, `DATABASE_URL=file:./sqlite.db` crea `sqlite.db` en la ra
 | `pnpm start` | Sirve un build ya generado |
 | `pnpm db:migrate` | Aplica migraciones con el `.env` local |
 | `pnpm db:seed` | Inserta los datos de demostración |
+| `pnpm test:e2e` | Ejecuta los smoke tests de Playwright |
 
-El repositorio no define actualmente scripts de lint, typecheck aislado ni tests automatizados.
+El repositorio no define actualmente scripts de lint ni typecheck aislado; el build ejecuta la comprobación TypeScript.
 
 ## Capacidades
 
@@ -111,7 +112,7 @@ El build de Next.js puede ejecutarse como servidor Node.js mediante `pnpm build`
 
 ## Limitaciones de calidad
 
-- No hay suite de tests, script de lint, script de typecheck dedicado ni CI configurada.
+- No hay script de lint, typecheck dedicado ni CI configurada; sí hay smoke E2E.
 - La comprobación automatizada disponible es el build de producción.
 - El seed no se puede repetir de forma segura sobre la misma base.
 - La seguridad y la preparación para datos reales siguen pendientes y quedan fuera de esta migración de tooling/documentación.

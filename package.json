@@ -11,6 +11,8 @@
     "dev": "next dev",
     "build": "next build",
     "test:auth": "node --import tsx --test tests/authorization.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "start": "next start",
     "db:migrate": "node --env-file=.env --import tsx src/db/migrate.ts",
     "db:seed": "node --env-file=.env --import tsx src/db/seed.ts"
@@ -35,6 +37,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.0",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
