@@ -2,10 +2,11 @@
 
 import { randomInt } from "node:crypto";
 import { db } from "@/db";
-import { athletes } from "@/db/schema";
+import { athleteActivationChallenges, athletes } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { normalizePhoneE164 } from "@/lib/athlete-activation";
 import { requireCoachId } from "@/lib/server-authorization";
 
 function generarPin() {
@@ -23,6 +24,8 @@ export async function crearAtleta(formData: FormData) {
   const categoria = formData.get("categoria") as string;
   const sexo = formData.get("sexo") as "masculino" | "femenino" | "";
   const notas = formData.get("notas") as string;
+  const telefonoE164 = normalizePhoneE164(formData.get("telefono"));
+  if (!telefonoE164) throw new Error("El teléfono debe estar en formato E.164.");
 
   const [nuevo] = await db
     .insert(athletes)
@@ -36,6 +39,7 @@ export async function crearAtleta(formData: FormData) {
       categoria: categoria || null,
       sexo: sexo || null,
       notas: notas || null,
+      telefonoE164,
       accessPin: generarPin(),
     })
     .returning();
@@ -56,6 +60,13 @@ export async function actualizarAtleta(atletaId: string, formData: FormData) {
   const sexo = formData.get("sexo") as "masculino" | "femenino" | "";
   const estado = formData.get("estado") as "activo" | "inactivo";
   const notas = formData.get("notas") as string;
+  const telefonoE164 = normalizePhoneE164(formData.get("telefono"));
+  if (!telefonoE164) throw new Error("El teléfono debe estar en formato E.164.");
+
+  const actual = await db.query.athletes.findFirst({
+    where: and(eq(athletes.id, atletaId), eq(athletes.coachId, coachId)),
+  });
+  if (!actual) throw new Error("No autorizado");
 
   await db
     .update(athletes)
@@ -69,8 +80,19 @@ export async function actualizarAtleta(atletaId: string, formData: FormData) {
       sexo: sexo || null,
       estado,
       notas: notas || null,
+      telefonoE164,
+      telefonoVerificadoAt:
+        actual.telefonoE164 === telefonoE164 ? actual.telefonoVerificadoAt : null,
+      invitacionEnviadaAt:
+        actual.telefonoE164 === telefonoE164 ? actual.invitacionEnviadaAt : null,
     })
     .where(and(eq(athletes.id, atletaId), eq(athletes.coachId, coachId)));
+
+  if (actual.telefonoE164 !== telefonoE164) {
+    await db
+      .delete(athleteActivationChallenges)
+      .where(eq(athleteActivationChallenges.athleteId, atletaId));
+  }
 
   revalidatePath(`/atletas/${atletaId}`);
 }

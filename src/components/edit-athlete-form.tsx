@@ -17,6 +17,7 @@ type Atleta = {
   sexo: "masculino" | "femenino" | null;
   estado: "activo" | "inactivo";
   notas: string | null;
+  telefonoE164: string | null;
 };
 
 export function EditAthleteForm({ atleta }: { atleta: Atleta }) {
@@ -48,6 +49,23 @@ export function EditAthleteForm({ atleta }: { atleta: Atleta }) {
             required
           />
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="telefono">Teléfono para WhatsApp</Label>
+        <Input
+          id="telefono"
+          name="telefono"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          defaultValue={atleta.telefonoE164 ?? ""}
+          placeholder="+5491112345678"
+          required
+        />
+        <p className="mt-1.5 text-xs text-chalk-faint">
+          Formato E.164, sin espacios. Cambiarlo invalida la verificación anterior.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -29,6 +29,23 @@ export default function NuevoAtletaPage() {
           </div>
         </div>
 
+        <div>
+          <Label htmlFor="telefono">Teléfono para invitación por WhatsApp</Label>
+          <Input
+            id="telefono"
+            name="telefono"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+5491112345678"
+            required
+            aria-describedby="telefono-ayuda"
+          />
+          <p id="telefono-ayuda" className="mt-1.5 text-xs text-chalk-faint">
+            Formato E.164: signo +, código de país y número, sin espacios.
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="fechaNacimiento">Fecha de nacimiento</Label>
