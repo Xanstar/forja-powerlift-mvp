@@ -11,6 +11,7 @@
     "dev": "next dev",
     "build": "next build",
     "test:auth": "node --import tsx --test tests/authorization.test.ts",
+    "test:onboarding": "node --import tsx --test tests/athlete-onboarding.test.ts tests/evolution-client.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "start": "next start",
