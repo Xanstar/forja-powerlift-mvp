@@ -20,7 +20,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           variant === "ghost" &&
             "border-transparent text-chalk-muted hover:border-border hover:bg-surface hover:text-chalk",
           variant === "danger" &&
-            "border-accent/60 bg-transparent text-accent hover:bg-accent hover:text-white",
+            "border-accent/60 bg-transparent text-accent-ink hover:bg-accent hover:text-white",
           size === "sm" && "px-3 py-1.5 text-sm",
           size === "md" && "px-4 py-2.5 text-sm",
           size === "lg" && "px-6 py-3.5 text-base",

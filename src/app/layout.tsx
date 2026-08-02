@@ -11,7 +11,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f2f0e9",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F4F1EA" },
+    { media: "(prefers-color-scheme: dark)", color: "#10294B" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -21,11 +24,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" data-scroll-behavior="smooth">
+    <html lang="es" data-scroll-behavior="smooth" data-theme="light" data-theme-preference="system" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=localStorage.getItem("forja-theme");if(p!=="light"&&p!=="dark"&&p!=="system")p="system";var t=p==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p;var d=document.documentElement;d.dataset.theme=t;d.dataset.themePreference=p;d.style.colorScheme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="dark"?"#10294B":"#F4F1EA"})}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-screen font-sans antialiased">
         {/*
           THESIS: Forja turns the meet room's evidence system into an operating interface, refusing generic dark SaaS.
-          OWN-WORLD: mineral paper, regulatory navy, competition red, crisp rules, stamps, condensed display and dominant numerals.
+          OWN-WORLD: bone paper, Forja navy, Impulse red, crisp rules, stamps and dominant tabular numerals.
           STORY: understand the coaching cycle, enter the right role, operate from evidence.
           FIRST VIEWPORT: Forja and the cycle at left, a live attempt-style operating board at right, actions above the fold.
           FORM: approved Sala de competencia replacement world; seed key user-pinned-sala-competencia.

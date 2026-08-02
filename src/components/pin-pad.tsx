@@ -63,7 +63,7 @@ export function PinPad() {
       type="button"
       onClick={onPress}
       disabled={isPending}
-      className="data-number flex h-16 select-none items-center justify-center border border-border-strong bg-surface text-2xl font-bold text-chalk transition-colors hover:border-chalk hover:bg-surface-hover active:bg-chalk active:text-white disabled:opacity-40 sm:h-[72px]"
+      className="data-number flex h-16 select-none items-center justify-center border border-border-strong bg-surface text-2xl font-bold text-chalk transition-colors hover:border-chalk hover:bg-surface-hover active:bg-brand-canvas active:text-on-brand disabled:opacity-40 sm:h-[72px]"
     >
       {label}
     </button>
@@ -93,7 +93,7 @@ export function PinPad() {
       </div>
 
       {error ? (
-        <p className="mt-3 text-center text-sm text-accent">{error}</p>
+        <p className="mt-3 text-center text-sm text-accent-ink">{error}</p>
       ) : (
         <p className="mt-3 text-center text-sm text-chalk-muted">
           Tu entrenador te dio un PIN de 4 dígitos
@@ -110,7 +110,7 @@ export function PinPad() {
           type="button"
           onClick={borrar}
           disabled={isPending}
-          className="flex h-16 select-none items-center justify-center border border-border-strong bg-surface text-chalk-muted transition-colors hover:border-chalk hover:bg-surface-hover hover:text-chalk active:bg-chalk active:text-white disabled:opacity-40 sm:h-[72px]"
+          className="flex h-16 select-none items-center justify-center border border-border-strong bg-surface text-chalk-muted transition-colors hover:border-chalk hover:bg-surface-hover hover:text-chalk active:bg-brand-canvas active:text-on-brand disabled:opacity-40 sm:h-[72px]"
           aria-label="Borrar"
         >
           <Delete size={22} />

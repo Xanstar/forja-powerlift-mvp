@@ -24,7 +24,7 @@ export function AthleteInvitation({ athleteId }: { athleteId: string }) {
         aria-live="polite"
         className={
           state.status === "error"
-            ? "text-sm text-accent"
+            ? "text-sm text-accent-ink"
             : "text-sm text-success"
         }
       >

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Radio } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { appName } from "@/lib/config";
+import { ForjaLogo } from "@/components/forja-logo";
+import { ThemeControl } from "@/components/theme-control";
 
 const cycle = ["Programar", "Ejecutar", "Detectar", "Revisar", "Ajustar"] as const;
 
@@ -12,10 +13,13 @@ export default async function RootPage() {
   return (
     <main className="min-h-screen bg-background text-chalk">
       <header className="flex items-center justify-between border-b border-chalk px-5 py-4 md:px-10">
-        <Link href="/" className="inline-flex min-h-11 items-center font-display text-xl font-bold tracking-[-0.04em]">{appName}</Link>
+        <Link href="/" className="inline-flex min-h-11 items-center">
+          <ForjaLogo className="w-[132px] sm:w-[150px]" />
+        </Link>
         <nav aria-label="Accesos principales" className="flex items-center gap-2">
+          <ThemeControl />
           <Link href="/hoy" className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-chalk-muted hover:text-chalk">Atleta</Link>
-          <Link href={coachHref} className="inline-flex min-h-11 items-center gap-2 bg-chalk px-4 text-sm font-semibold text-white hover:bg-steel">
+          <Link href={coachHref} className="inline-flex min-h-11 items-center gap-2 bg-brand-canvas px-4 text-sm font-semibold text-on-brand hover:bg-on-brand-hover">
             {session ? "Abrir panel" : "Ingresar"} <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </nav>
@@ -37,17 +41,17 @@ export default async function RootPage() {
         </div>
 
         <div className="public-board" aria-label="Ejemplo de plan y ejecución">
-          <div className="flex items-center justify-between border-b border-white/60 pb-5">
-            <p className="text-sm font-semibold text-white">Plan vs. ejecución</p>
-            <Radio size={22} className="text-red-400" aria-hidden="true" />
+          <div className="flex items-center justify-between border-b border-on-brand-border pb-5">
+            <p className="text-sm font-semibold text-on-brand">Plan vs. ejecución</p>
+            <Radio size={22} className="text-accent" aria-hidden="true" />
           </div>
           <div className="mt-7">
-            <div className="public-board-row text-white/70"><span>SERIE</span><span>PLAN</span><span>HECHO</span></div>
-            <div className="public-board-row"><span className="data-number text-3xl">1</span><span>5 × 120 kg</span><span className="text-green-200">Cumplida</span></div>
+            <div className="public-board-row text-on-brand-muted"><span>SERIE</span><span>PLAN</span><span>HECHO</span></div>
+            <div className="public-board-row"><span className="data-number text-3xl">1</span><span>5 × 120 kg</span><span className="font-semibold text-brand-bone">Cumplida</span></div>
             <div className="public-board-row"><span className="data-number text-3xl">2</span><span>5 × 120 kg</span><span className="data-number text-2xl">5 × 117,5</span></div>
-            <div className="public-board-row"><span className="data-number text-3xl">3</span><span>5 × 120 kg</span><span className="competition-stamp border-red-300 text-red-200">Revisar</span></div>
+            <div className="public-board-row"><span className="data-number text-3xl">3</span><span>5 × 120 kg</span><span className="competition-stamp border-accent text-on-brand">Revisar</span></div>
           </div>
-          <p className="mt-7 max-w-md text-sm leading-6 text-white/70">La prescripción y el resultado permanecen juntos para la próxima decisión.</p>
+          <p className="mt-7 max-w-md text-sm leading-6 text-on-brand-muted">La prescripción y el resultado permanecen juntos para la próxima decisión.</p>
         </div>
       </section>
 
@@ -68,7 +72,7 @@ export default async function RootPage() {
       </section>
 
       <footer className="flex items-center justify-between border-t border-chalk px-5 py-7 md:px-10">
-        <p className="font-display text-xl font-bold">{appName}</p>
+        <ForjaLogo className="w-[132px] sm:w-[150px]" />
         <p className="text-sm text-chalk-muted">Gym Sport · powerlifting</p>
       </footer>
     </main>

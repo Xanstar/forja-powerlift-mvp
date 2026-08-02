@@ -29,16 +29,16 @@ export function EvolutionChart({
       <div className="h-56 w-full" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={datos} accessibilityLayer={false}>
-            <CartesianGrid stroke="#26272b" vertical={false} />
+            <CartesianGrid stroke="var(--border-strong)" vertical={false} />
             <XAxis
               dataKey="fecha"
-              stroke="#4f5b68"
+              stroke="var(--chalk-muted)"
               fontSize={11}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              stroke="#4f5b68"
+              stroke="var(--chalk-muted)"
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -47,11 +47,11 @@ export function EvolutionChart({
             />
             <Tooltip
               contentStyle={{
-                background: "#fbfaf6",
-                border: "1px solid #10233d",
+                background: "var(--surface)",
+                border: "1px solid var(--border-strong)",
                 borderRadius: 0,
                 fontSize: 12,
-                color: "#10233d",
+                color: "var(--chalk)",
               }}
             />
             <Line
@@ -59,9 +59,9 @@ export function EvolutionChart({
               dataKey="peso"
               name={metricLabel}
               unit=" kg"
-              stroke="#1f4e79"
+              stroke="var(--accent)"
               strokeWidth={2}
-              dot={{ fill: "#1f4e79", r: 3 }}
+              dot={{ fill: "var(--accent)", r: 3 }}
               activeDot={{ r: 5 }}
             />
           </LineChart>

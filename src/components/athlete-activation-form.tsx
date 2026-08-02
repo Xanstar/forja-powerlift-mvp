@@ -42,7 +42,7 @@ export function AthleteActivationForm() {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Verificando..." : "Activar acceso"}
       </Button>
-      <p aria-live="polite" className="min-h-5 text-sm text-accent">
+      <p aria-live="polite" className="min-h-5 text-sm text-accent-ink">
         {state.message}
       </p>
     </form>

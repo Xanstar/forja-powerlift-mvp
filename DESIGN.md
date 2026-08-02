@@ -1,24 +1,25 @@
 ---
 name: Forja
-description: Sistema operativo de coaching inspirado en la sala de competencia.
+description: Sistema de entrenamiento preciso, sobrio y orientado al rendimiento.
 colors:
-  competition-red: "#c9272c"
-  competition-red-hover: "#a9181d"
-  regulatory-navy: "#10233d"
-  results-blue: "#1f4e79"
-  approved-green: "#1f6b4f"
-  mineral-ground: "#f2f0e9"
-  official-paper: "#fbfaf6"
-  working-surface: "#e9e7df"
-  rule-light: "#d2cfc5"
-  rule-strong: "#9b9a94"
-  secondary-ink: "#4f5b68"
+  azul-forja: "#10294B"
+  blanco-hueso: "#F4F1EA"
+  rojo-impulso: "#D93636"
+  gris-niebla: "#A7AFBA"
+  rojo-impulso-hover: "#B62A2A"
+  papel-operativo: "#FFFFFF"
+  tinta-secundaria: "#526075"
+  success: "#286B4F"
+  dark-surface: "#1C3B63"
+  dark-surface-hover: "#31547D"
+  dark-border: "#587598"
+  dark-muted: "#C4CAD1"
 typography:
   display:
-    fontFamily: "Space Grotesk, sans-serif"
-    fontSize: "clamp(3.4rem, 8vw, 6rem)"
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(2.8rem, 7vw, 5rem)"
     fontWeight: 700
-    lineHeight: 0.9
+    lineHeight: 0.92
     letterSpacing: "-0.04em"
   body:
     fontFamily: "Inter, sans-serif"
@@ -46,22 +47,22 @@ contentWidth:
   operations: "72rem"
 components:
   button-primary:
-    backgroundColor: "{colors.competition-red}"
-    textColor: "{colors.official-paper}"
+    backgroundColor: "{colors.rojo-impulso}"
+    textColor: "{colors.papel-operativo}"
     rounded: "{rounded.control}"
     padding: "10px 16px"
     height: "44px"
   button-primary-hover:
-    backgroundColor: "{colors.competition-red-hover}"
+    backgroundColor: "{colors.rojo-impulso-hover}"
   input:
-    backgroundColor: "{colors.official-paper}"
-    textColor: "{colors.regulatory-navy}"
+    backgroundColor: "{colors.papel-operativo}"
+    textColor: "{colors.azul-forja}"
     rounded: "{rounded.control}"
     padding: "10px 14px"
     height: "44px"
   working-sheet:
-    backgroundColor: "{colors.official-paper}"
-    textColor: "{colors.regulatory-navy}"
+    backgroundColor: "{colors.papel-operativo}"
+    textColor: "{colors.azul-forja}"
     rounded: "{rounded.surface}"
     padding: "20px"
 ---
@@ -72,7 +73,7 @@ components:
 
 **Creative North Star: "Gym Sport / Sala de competencia"**
 
-Forja traduce las hojas oficiales de pesaje, los tableros de intentos, las señales de jueces y los sistemas de resultados a un producto digital contemporáneo. La interfaz se siente verificable y operativa: cada regla separa información, cada número merece jerarquía y cada color comunica una decisión.
+Forja traduce las hojas oficiales de pesaje, los tableros de intentos, las señales de jueces y los sistemas de resultados a un producto digital contemporáneo. La interfaz es precisa, sobria y orientada al rendimiento: cada regla separa información, cada número merece jerarquía y cada color comunica una decisión.
 
 La evolución Gym Sport lleva esa autoridad a la planta de entrenamiento sin recurrir al estereotipo rojo-negro de culturismo. Papel mineral, navy reglamentario y señales de resultado conviven con referencias contenidas a goma, plataforma, acero galvanizado y tiza. Son materiales y geometrías de trabajo, nunca imágenes falsas ni decoración temática.
 
@@ -80,48 +81,63 @@ La marca Forja siempre domina. La identidad de un gimnasio puede aparecer como c
 
 **Key Characteristics:**
 
-- Superficies minerales claras con tinta azul reglamentaria.
-- Rojo de competencia reservado para decisiones y desvíos.
+- Superficies Blanco Hueso con tinta Azul Forja.
+- Rojo Impulso reservado para acciones primarias, decisiones y desvíos.
 - Reglas nítidas, tablas, estados sellados y numerales tabulares.
 - Densidad de sala de control sin sacrificar respiración ni foco.
 
+### Logo aprobado
+
+El logo aprobado es la composición horizontal de `public/brand/forja-lockup-source.png`: llama roja nítida sobre una barra compacta y wordmark `Forja` en azul navy. Debe utilizarse tal como está, sin redibujar, sustituir la tipografía, modificar proporciones ni agregar descriptores. La llama no admite glow, blur, halo, feathering, sombra ni haze translúcido.
+
+`public/brand/forja-lockup-source.png` es la autoridad positiva de producción; `public/brand/forja-lockup-negative-source.png` es la negativa; sus equivalentes `-350` sirven a la interfaz. `public/brand/forja-mark-source.png` y `public/brand/forja-mark-negative-source.png` son las marcas cuadradas. Todos preservan la misma geometría limpia.
+
+Usar la composición completa para la marca visible del producto y mantener el nombre accesible `Forja`, salvo que un texto adyacente ya anuncie la marca. Reservar la marca cuadrada para favicon e íconos de aplicación. En superficies claras se usa la positiva: llama Rojo Impulso, barra y wordmark Azul Forja. En Azul Forja se usa la negativa: la llama permanece Rojo Impulso y barra y wordmark pasan a Blanco Hueso, sin placa de contención.
+
 ## Colors
 
-La paleta combina papel mineral, tinta reglamentaria y señales de decisión.
+La paleta canónica combina Blanco Hueso, Azul Forja, Rojo Impulso y Gris Niebla. Los tonos auxiliares sólo derivan estados interactivos o semánticos.
 
 ### Primary
 
-- **Competition Red:** acciones primarias, desvíos que requieren revisión y señales de alta prioridad.
+- **Rojo Impulso:** acciones primarias, desvíos que requieren revisión y señales de alta prioridad.
 
 ### Secondary
 
-- **Regulatory Navy:** marca, navegación estructural, texto principal y fondos de control.
-- **Results Blue:** foco, datos secundarios y estados informativos.
-- **Approved Green:** confirmaciones y ejecución conforme al plan.
+- **Azul Forja:** marca, navegación estructural, texto principal, foco y fondos de métricas.
+- **Verde semántico:** confirmaciones y ejecución conforme al plan; no forma parte de la identidad primaria.
 
 ### Neutral
 
-- **Mineral Ground:** superficie ambiental de trabajo.
-- **Official Paper:** hojas, formularios y áreas de lectura.
-- **Rule Light / Rule Strong:** divisores según jerarquía.
-- **Secondary Ink:** texto de apoyo con contraste legible.
+- **Blanco Hueso:** superficie ambiental de trabajo.
+- **Papel operativo:** formularios y áreas de lectura.
+- **Gris Niebla:** divisores y texto inverso de apoyo sobre Azul Forja.
+- **Tinta secundaria:** texto de apoyo con contraste legible.
 
 ### Named Rules
 
-**The Decision Red Rule.** El rojo identifica una acción decisiva o una diferencia relevante; no decora superficies.
+**The Decision Red Rule.** Rojo Impulso identifica una acción decisiva o una diferencia relevante; no decora superficies.
 
 **The Ink Hierarchy Rule.** Azul reglamentario para autoridad, tinta secundaria para contexto y nunca gris tenue sobre color.
 
+### Temas digitales
+
+- **Claro:** Blanco Hueso como ambiente, papel blanco como superficie, Azul Forja como tinta y Rojo Impulso como acción.
+- **Oscuro:** Azul Forja como ambiente, `#1C3B63` como superficie elevada, Blanco Hueso como tinta, `#C4CAD1` como texto secundario y `#587598` como borde.
+- **Sistema:** es el valor inicial seguro y sigue `prefers-color-scheme`; una elección explícita Claro u Oscuro se conserva en `localStorage`.
+- La resolución ocurre antes del primer paint mediante `data-theme`; los componentes consumen tokens semánticos y nunca acumulan clases oscuras locales.
+- El control ofrece Claro, Oscuro y Sistema con nombre accesible y foco visible en cabeceras públicas, atleta y coach.
+
 ## Typography
 
-**Display Font:** Space Grotesk (sans-serif fallback)  
-**Body Font:** Inter (sans-serif fallback)
+**Display Font:** Inter (sans-serif compatible como fallback)
+**Body Font:** Inter (sans-serif compatible como fallback)
 
-**Character:** Space Grotesk aporta una voz compacta y técnica para marca, titulares y cifras. Inter sostiene formularios y lectura continua sin competir con los datos.
+**Character:** Inter aporta una voz precisa y estable en titulares, formularios, lectura continua y datos densos. La jerarquía depende de tamaño, peso y espacio, no de sumar familias.
 
 ### Hierarchy
 
-- **Display:** peso 700, hasta 6rem, interletrado -0.04em; reservado para tesis públicas y números dominantes.
+- **Display:** peso 700, hasta 5rem, interletrado -0.04em; reservado para tesis públicas y números dominantes.
 - **Headline:** peso 700, 2.25–3.75rem; títulos de ruta y secciones principales.
 - **Title:** peso 600–700, 1.125–1.5rem; ejercicios, bloques y nombres.
 - **Body:** peso 400–500, 1rem y línea 1.75; medida recomendada de 65–75 caracteres.
@@ -169,9 +185,9 @@ La voz es español neutral y propia del sector. Para coach, los controles y esta
 
 ### Semantic Statuses
 
-- **Pendiente / Informativo:** tinta results-blue con etiqueta textual.
+- **Pendiente / Informativo:** tinta Azul Forja con etiqueta textual.
 - **Sincronizado / Cumplido:** approved-green con confirmación textual.
-- **Revisar / Desvío / Conflicto:** competition-red, reservado para decisiones y excepciones reales.
+- **Revisar / Desvío / Conflicto:** Rojo Impulso, reservado para decisiones y excepciones reales.
 - **Omitido:** navy secundario; es un resultado explícito, no un error.
 - **Destructivo:** rojo sólo dentro de una confirmación abierta.
 
@@ -193,12 +209,12 @@ La voz es español neutral y propia del sector. Para coach, los controles y esta
 ### Inputs / Fields
 
 - **Style:** papel oficial, borde fuerte, altura mínima de 44px y cifras tabulares.
-- **Focus:** borde y anillo azul reglamentario.
+- **Focus:** anillo Azul Forja en claro y Rojo Impulso claro en oscuro, siempre con 3px y separación visible.
 - **Error / Disabled:** rojo con fondo rojo claro; opacidad reducida y eventos bloqueados para disabled.
 
 ### Navigation
 
-Desktop coach usa un panel navy de ancho fijo con estado activo invertido. Mobile coach usa navegación inferior de cuatro columnas; nunca comprime el sidebar desktop. Las superficies públicas y atleta usan cabeceras regladas con Forja como marca principal.
+Desktop coach usa un panel navy de ancho fijo con estado activo invertido. Mobile coach usa navegación inferior de cuatro columnas; nunca comprime el sidebar desktop. Las superficies públicas y atleta usan cabeceras regladas con Forja como marca principal. El logo cambia entre positivo y negativo por contexto o tema sin flash ni recoloreo CSS del bitmap.
 
 ### Competition Stamp
 
@@ -219,7 +235,7 @@ Superficie de papel con reglas horizontales tenues cada 2.75rem. Aloja formulari
 
 ### Don't:
 
-- **Don't** reconstruir la interfaz como dark SaaS, rojo sobre negro o gimnasio estereotípico.
+- **Don't** convertir el tema oscuro en dark SaaS genérico, rojo sobre negro o gimnasio estereotípico: su lienzo es Azul Forja y conserva la gramática de evidencia.
 - **Don't** usar mosaicos de tarjetas redondeadas intercambiables como estructura principal.
 - **Don't** repetir iconos Lucide donde el texto o el dato ya comunica la función.
 - **Don't** usar pills para navegación rutinaria, blur decorativo, gradientes de texto o sombras bloque.

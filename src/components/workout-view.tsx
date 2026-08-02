@@ -334,7 +334,7 @@ export function WorkoutView({
           <div className="mb-3 border border-steel bg-blue-50 p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-chalk">
-                <Timer size={16} className="text-accent" />
+                <Timer size={16} className="text-accent-ink" />
                 <span className="font-medium">Descanso</span>
                 {timerListo && (
                   <span className="text-xs font-medium text-success">
@@ -590,7 +590,7 @@ function SetRow({
               log.repeticionesReales,
               log.rpeReal
             ).difiere && (
-              <span className="text-accent"> · distinto del plan</span>
+              <span className="text-accent-ink"> · distinto del plan</span>
             )}
           </p>
         )}
@@ -625,7 +625,7 @@ function SetRow({
             "flex h-11 w-11 shrink-0 items-center justify-center border-2 transition-colors",
             guardado
               ? "border-success bg-success/15 text-success"
-              : "border-border-strong text-chalk-faint hover:border-accent hover:text-accent"
+              : "border-border-strong text-chalk-faint hover:border-accent hover:text-accent-ink"
           )}
         >
           {guardado ? <CheckCircle2 size={22} /> : <Circle size={22} />}
@@ -716,7 +716,7 @@ function SetRow({
               Guardado en el celular · se sincroniza cuando vuelva la señal
             </p>
           )}
-          {saveError && <p role="alert" className="mt-2 text-xs font-semibold text-accent">{saveError}</p>}
+          {saveError && <p role="alert" className="mt-2 text-xs font-semibold text-accent-ink">{saveError}</p>}
         </div>
       )}
 
@@ -728,7 +728,7 @@ function SetRow({
       {guardado && status !== "skipped" && !abierto && diff.difiere && (
         <p className="mt-2 pl-[52px] text-xs">
           <span className="text-chalk-muted">Hecho: </span>
-          <span className="font-medium text-accent">
+          <span className="font-medium text-accent-ink">
             {hechoPeso != null ? `${hechoPeso}kg` : "—"} ×{" "}
             {hechoReps != null ? hechoReps : "—"}
             {hechoRpe != null ? ` @ RPE ${hechoRpe}` : ""}

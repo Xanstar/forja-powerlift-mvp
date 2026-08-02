@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { WorkoutView } from "@/components/workout-view";
 import { cn } from "@/lib/utils";
+import { ForjaLogo } from "@/components/forja-logo";
+import { ThemeControl } from "@/components/theme-control";
 
 export type DiaAtleta = {
   id: string;
@@ -109,10 +111,11 @@ export function AthleteHome({
     <div className="min-h-screen bg-background pb-32">
       <header className="flex items-center justify-between border-b border-chalk bg-surface px-4 py-4">
         <div className="flex items-center gap-2">
-          <span className="font-display text-xl font-bold tracking-[-0.04em] text-chalk">Forja</span>
-          <span className="border-l border-border-strong pl-2 text-sm font-semibold text-chalk-muted">{nombre}</span>
+          <ForjaLogo className="w-[112px] sm:w-[132px]" />
+          <span className="hidden border-l border-border-strong pl-2 text-sm font-semibold text-chalk-muted sm:inline">{nombre}</span>
         </div>
         <div className="flex items-center gap-1">
+          <ThemeControl />
           <Link
             href={`/progreso/${pin}`}
             className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk"
@@ -149,7 +152,7 @@ export function AthleteHome({
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-accent bg-surface text-accent">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-accent bg-surface text-accent-ink">
                     <ChevronRight size={20} />
                   </div>
                   <div className="min-w-0">

@@ -162,7 +162,7 @@ export function EditAthleteForm({ atleta }: { atleta: Atleta }) {
       </div>
 
       <details className="border-t border-border pt-4">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-accent">Zona de peligro</summary>
+        <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-accent-ink">Zona de peligro</summary>
         {confirmandoBorrado ? (
           <div className="flex items-center gap-3">
             <span className="text-sm text-chalk-muted">

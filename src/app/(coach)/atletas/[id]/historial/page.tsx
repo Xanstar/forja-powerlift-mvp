@@ -112,7 +112,7 @@ export default async function HistorialPage({
       )}
 
       {ejerciciosConDatos.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-border-strong p-12 text-center text-sm text-chalk-muted">
+        <div className="mt-8 border border-dashed border-border-strong p-12 text-center text-sm text-chalk-muted">
           Todavía no hay entrenamientos registrados para este atleta.
         </div>
       ) : (

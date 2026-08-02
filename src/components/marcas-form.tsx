@@ -104,13 +104,13 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
 
   if (atletas.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border-strong p-12 text-center text-sm text-chalk-muted">
+      <div className="border border-dashed border-border-strong p-12 text-center text-sm text-chalk-muted">
         No hay atletas activos para una toma de marcas.{" "}
-        <Link href="/atletas/nuevo" className="text-accent hover:underline">
+        <Link href="/atletas/nuevo" className="text-accent-ink hover:underline">
           Agregá atletas
         </Link>{" "}
         o{" "}
-        <Link href="/atletas" className="text-accent hover:underline">
+        <Link href="/atletas" className="text-accent-ink hover:underline">
           importalos desde Excel
         </Link>
         .
@@ -136,7 +136,7 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
       </div>
 
       {resultado && (
-        <div className="flex items-center gap-2 border border-success bg-green-50 px-3.5 py-2.5 text-sm font-medium text-success">
+        <div className="flex items-center gap-2 border border-success bg-success-soft px-3.5 py-2.5 text-sm font-medium text-success">
           <CheckCircle2 size={16} /> {resultado}
         </div>
       )}

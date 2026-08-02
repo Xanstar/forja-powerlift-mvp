@@ -3,26 +3,39 @@
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
 @import "@fontsource/inter/700.css";
-@import "@fontsource/space-grotesk/500.css";
-@import "@fontsource/space-grotesk/700.css";
 
 :root {
-  --background: #f2f0e9;
-  --surface: #fbfaf6;
-  --surface-hover: #e9e7df;
-  --border: #d2cfc5;
-  --border-strong: #9b9a94;
-  --chalk: #10233d;
-  --chalk-muted: #4f5b68;
-  --chalk-faint: #737b82;
-  --accent: #c9272c;
-  --accent-hover: #a9181d;
-  --steel: #1f4e79;
-  --success: #1f6b4f;
-  --ink: #111820;
-  --paper: #fbfaf6;
-  --navy: #10233d;
-  --rule: #a9a69e;
+  --brand-navy: #10294b;
+  --brand-bone: #f4f1ea;
+  --brand-red: #d93636;
+  --brand-mist: #a7afba;
+  --background: var(--brand-bone);
+  --surface: #ffffff;
+  --surface-hover: #e7e7e5;
+  --border: #d6d7d7;
+  --border-strong: var(--brand-mist);
+  --chalk: var(--brand-navy);
+  --chalk-muted: #526075;
+  --chalk-faint: #626c79;
+  --accent: var(--brand-red);
+  --accent-hover: #b62a2a;
+  --accent-ink: #b62a2a;
+  --accent-soft: #fbe8e6;
+  --steel: var(--brand-navy);
+  --success: #286b4f;
+  --success-soft: #e2f0e9;
+  --brand-canvas: var(--brand-navy);
+  --on-brand: var(--brand-bone);
+  --on-brand-muted: #c4cad1;
+  --on-brand-border: #587598;
+  --on-brand-hover: #1c3b63;
+  --grid-line: rgb(16 41 75 / 4%);
+  --sheet-rule: rgb(16 41 75 / 5%);
+  --focus-ring: var(--brand-navy);
+  --ink: var(--brand-navy);
+  --paper: var(--surface);
+  --navy: var(--brand-navy);
+  --rule: var(--brand-mist);
 }
 
 @theme inline {
@@ -36,9 +49,21 @@
   --color-chalk-faint: var(--chalk-faint);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
   --color-steel: var(--steel);
   --color-success: var(--success);
-  --font-display: "Space Grotesk", sans-serif;
+  --color-success-soft: var(--success-soft);
+  --color-brand-canvas: var(--brand-canvas);
+  --color-on-brand: var(--on-brand);
+  --color-on-brand-muted: var(--on-brand-muted);
+  --color-on-brand-border: var(--on-brand-border);
+  --color-on-brand-hover: var(--on-brand-hover);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-bone: var(--brand-bone);
+  --color-brand-red: var(--brand-red);
+  --color-brand-mist: var(--brand-mist);
+  --font-display: "Inter", sans-serif;
   --font-sans: "Inter", sans-serif;
 }
 
@@ -47,13 +72,45 @@
 }
 
 html {
-  color-scheme: light;
+  color-scheme: light dark;
   scroll-behavior: smooth;
+}
+
+html[data-theme="dark"] {
+  --background: var(--brand-navy);
+  --surface: #1c3b63;
+  --surface-hover: #31547d;
+  --border: #587598;
+  --border-strong: #879cb5;
+  --chalk: var(--brand-bone);
+  --chalk-muted: #c4cad1;
+  --chalk-faint: #bdc9d8;
+  --accent-hover: #b62a2a;
+  --accent-ink: #f2aeae;
+  --accent-soft: #3b161b;
+  --steel: #bdc9d8;
+  --success: #8fd1af;
+  --success-soft: #173d31;
+  --grid-line: rgb(244 241 234 / 5%);
+  --sheet-rule: rgb(244 241 234 / 7%);
+  --focus-ring: #e77676;
+}
+
+.theme-logo-negative {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-logo-positive {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-logo-negative {
+  display: block;
 }
 
 body {
   background:
-    linear-gradient(90deg, transparent 0, transparent calc(100% - 1px), rgb(16 35 61 / 4%) calc(100% - 1px)) 0 0 / 32px 100%,
+    linear-gradient(90deg, transparent 0, transparent calc(100% - 1px), var(--grid-line) calc(100% - 1px)) 0 0 / 32px 100%,
     var(--background);
   color: var(--chalk);
   font-family: var(--font-sans);
@@ -91,13 +148,13 @@ table {
 }
 
 :focus-visible {
-  outline: 3px solid var(--steel);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
 .competition-sheet {
   background-color: var(--surface);
-  background-image: linear-gradient(rgb(16 35 61 / 5%) 1px, transparent 1px);
+  background-image: linear-gradient(var(--sheet-rule) 1px, transparent 1px);
   background-size: 100% 2.75rem;
 }
 
@@ -107,7 +164,7 @@ table {
   min-height: 1.75rem;
   border: 1px solid currentColor;
   padding: 0.25rem 0.55rem;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -149,8 +206,8 @@ table {
 
 .public-board {
   border-left: 1px solid var(--navy);
-  background: var(--navy);
-  color: white;
+  background: var(--brand-canvas);
+  color: var(--on-brand);
   padding: clamp(2rem, 5vw, 5rem);
 }
 
@@ -159,7 +216,7 @@ table {
   grid-template-columns: 3rem 1fr auto;
   gap: 1rem;
   align-items: baseline;
-  border-bottom: 1px solid rgb(255 255 255 / 24%);
+  border-bottom: 1px solid var(--on-brand-border);
   padding: 1.15rem 0;
 }
 

@@ -59,7 +59,7 @@ export function NewProgramForm({ athleteId }: { athleteId: string }) {
             onChange={(e) =>
               setSemanas(Math.min(16, Math.max(1, parseInt(e.target.value, 10) || 1)))
             }
-            className="w-16 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-chalk"
+            className="w-16 border border-border bg-surface px-2 py-1.5 text-sm text-chalk"
           />
         </label>
         <label className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export function NewProgramForm({ athleteId }: { athleteId: string }) {
             type="date"
             value={fechaInicio}
             onChange={(e) => setFechaInicio(e.target.value)}
-            className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-chalk"
+            className="border border-border bg-surface px-2 py-1.5 text-sm text-chalk"
           />
         </label>
       </div>

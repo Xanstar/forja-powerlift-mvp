@@ -11,6 +11,8 @@ import { puntajeWilks, puntajeIpfGl, totalDesdeRecords } from "@/lib/scoring";
 import { normalizarNombre } from "@/lib/nombres";
 import { athleteForAccessPin } from "@/lib/server-authorization";
 import { aggregateSessionProgress } from "@/lib/execution";
+import { ForjaLogo } from "@/components/forja-logo";
+import { ThemeControl } from "@/components/theme-control";
 
 const NOMBRES_LIFT: Record<string, string> = {
   sentadilla: "Sentadilla",
@@ -64,16 +66,16 @@ export default async function ProgresoPage({
     <div className="min-h-screen bg-background pb-28">
       <header className="flex items-center justify-between border-b border-chalk bg-surface px-4 py-4">
         <div className="flex items-center gap-2">
-          <span className="font-display text-xl font-bold tracking-[-0.04em] text-chalk">Forja</span>
-          <span className="border-l border-border-strong pl-2 text-sm font-semibold text-chalk-muted">Mi progreso</span>
+          <ForjaLogo className="w-[112px] sm:w-[132px]" />
+          <span className="hidden border-l border-border-strong pl-2 text-sm font-semibold text-chalk-muted sm:inline">Mi progreso</span>
         </div>
-        <Link
+        <div className="flex items-center gap-1"><ThemeControl /><Link
           href={`/hoy/${pin}`}
           className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk"
         >
           <ArrowLeft size={15} />
           Entrenar
-        </Link>
+        </Link></div>
       </header>
 
       <div className="px-4 py-5">
@@ -84,19 +86,19 @@ export default async function ProgresoPage({
           Mejor e1RM por sesión, calculado con la fórmula de Epley.
         </p>
 
-        <div className="mt-6 grid grid-cols-3 border-y border-chalk">
+        <div className="mt-6 grid grid-cols-3 border-y border-on-brand-border bg-brand-canvas text-on-brand">
           {lifts.map((lift) => {
             const rec = records[lift];
             return (
-              <Card key={lift} className="border-0 border-r border-chalk bg-transparent p-3 last:border-r-0">
-                <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
+              <Card key={lift} className="border-0 border-r border-on-brand-border bg-transparent p-3 last:border-r-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-brand-mist">
                   {NOMBRES_LIFT[lift]}
                 </p>
-                <p className="data-number mt-1.5 text-2xl font-bold text-chalk">
+                <p className="data-number mt-1.5 text-2xl font-bold text-on-brand">
                   {rec ? `${rec.valorKg} kg` : "—"}
                 </p>
                 {rec && (
-                  <p className="mt-0.5 text-xs text-chalk-faint">
+                  <p className="mt-0.5 text-xs text-brand-mist">
                     {rec.tipo === "real" ? "real" : "estimado"}
                   </p>
                 )}
@@ -135,7 +137,7 @@ export default async function ProgresoPage({
         )}
 
         {ejerciciosConDatos.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-dashed border-border-strong p-10 text-center text-sm text-chalk-muted">
+          <div className="mt-8 border border-dashed border-border-strong p-10 text-center text-sm text-chalk-muted">
             Todavía no hay sesiones registradas con carga y repeticiones.
           </div>
         ) : (

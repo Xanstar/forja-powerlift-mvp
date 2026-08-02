@@ -195,7 +195,7 @@ function DiaBlock({ athleteId, dia, readOnly }: { athleteId: string; dia: Dia; r
               <button
                 type="button"
                 onClick={() => setConfirmando(true)}
-                className="flex min-h-11 w-full items-center gap-2 px-2 text-left text-sm font-semibold text-accent hover:bg-red-50"
+                className="flex min-h-11 w-full items-center gap-2 px-2 text-left text-sm font-semibold text-accent-ink hover:bg-accent-soft"
               >
                 <Trash2 size={14} /> Eliminar día
               </button>
@@ -267,7 +267,7 @@ function NuevoEjercicioForm({
                       "min-h-11 border px-3 py-1 text-xs font-semibold transition-colors",
                       nombre === ejercicio.nombre
                         ? "border-accent bg-accent text-white"
-                        : "border-border-strong bg-background text-chalk-muted hover:border-accent hover:text-accent"
+                        : "border-border-strong bg-background text-chalk-muted hover:border-accent hover:text-accent-ink"
                     )}
                   >
                     {ejercicio.nombre}
@@ -344,7 +344,7 @@ function EjercicioBlock({
             <button
               type="button"
               onClick={() => startTransition(() => eliminarEjercicio(ejercicio.id, athleteId))}
-              className="min-h-11 px-2 text-xs font-semibold text-accent"
+              className="min-h-11 px-2 text-xs font-semibold text-accent-ink"
             >
               Confirmar
             </button>
@@ -357,7 +357,7 @@ function EjercicioBlock({
             type="button"
             aria-label={`Eliminar ${ejercicio.nombre}`}
             onClick={() => setConfirmando(true)}
-            className="flex min-h-11 items-center gap-1 px-2 text-xs text-chalk-muted hover:text-accent"
+            className="flex min-h-11 items-center gap-1 px-2 text-xs text-chalk-muted hover:text-accent-ink"
           >
             <Trash2 size={13} /> Eliminar
           </button>
@@ -409,7 +409,7 @@ function EjercicioBlock({
       ) : (
         <button
           onClick={() => setAgregandoSet(true)}
-          className="mt-2 inline-flex min-h-11 items-center text-xs text-chalk-muted hover:text-accent"
+          className="mt-2 inline-flex min-h-11 items-center text-xs text-chalk-muted hover:text-accent-ink"
         >
           + Agregar series
         </button>

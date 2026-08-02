@@ -8,12 +8,12 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Planificación y seguimiento para entrenadores de powerlifting.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0c0d0f",
-    theme_color: "#0c0d0f",
+    background_color: "#F4F1EA",
+    theme_color: "#10294B",
     orientation: "portrait",
     icons: [
-      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/brand/forja-mark-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/brand/forja-mark-512.png", sizes: "512x512", type: "image/png" },
     ],
   };
 }
