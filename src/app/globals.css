@@ -108,7 +108,7 @@ table {
   border: 1px solid currentColor;
   padding: 0.25rem 0.55rem;
   color: var(--accent);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   line-height: 1;
@@ -135,7 +135,7 @@ table {
 }
 
 .public-hero {
-  min-height: min(760px, 100svh);
+  min-height: min(620px, 88svh);
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(21rem, 0.95fr);
 }
@@ -144,7 +144,7 @@ table {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: clamp(2rem, 6vw, 6rem);
+  padding: clamp(2rem, 5vw, 4.5rem);
 }
 
 .public-board {

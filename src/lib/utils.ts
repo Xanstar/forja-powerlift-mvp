@@ -16,7 +16,7 @@ export function pesoDesdePorcentaje(rmKg: number, porcentaje: number): number {
   return Math.round(((rmKg * porcentaje) / 100) * 2) / 2; // redondeo a 0.5kg
 }
 
-/** Puntaje IPF GL Points simplificado (coeficientes 2020, hombres/mujeres genérico) */
+/** Puntos IPF GL simplificados (coeficientes 2020, hombres/mujeres genérico) */
 export function calcularEdad(fechaNacimiento: Date | null): number | null {
   if (!fechaNacimiento) return null;
   const diff = Date.now() - fechaNacimiento.getTime();

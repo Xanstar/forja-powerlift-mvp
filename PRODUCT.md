@@ -44,11 +44,11 @@ Las capacidades cuyo funcionamiento está confirmado incluyen autenticación y p
 
 Restricciones y brechas conocidas:
 
-- La ejecución histórica está acoplada a entidades de planificación mutables, lo que genera riesgos de eliminación en cascada y de auditabilidad.
-- No existen instantáneas persistentes de sesiones de entrenamiento y rendimiento por serie.
-- Las restricciones de base de datos, los límites transaccionales y la idempotencia son insuficientes para las escrituras críticas.
-- Las semánticas del panel, el calendario y los pendientes todavía no conforman una cola confiable de acciones para el coach.
-- La planificación requiere entradas repetitivas y las prescripciones basadas en porcentaje de 1RM no se resuelven ni se guardan como instantáneas al momento de la ejecución.
+- La ejecución persiste instantáneas independientes de programa, día, ejercicio, prescripción resuelta y resultado; modificar o retirar un plan no altera esa evidencia.
+- Las escrituras de series usan identificadores de mutación idempotentes y distinguen confirmación, pendiente y conflicto sin conexión.
+- El cierre de una sesión exige que cada serie esté registrada u omitida explícitamente.
+- Los programas admiten borradores versionados y publicación explícita; el programa publicado permanece vigente mientras se prepara otro.
+- El panel del coach prioriza excepciones respaldadas por fechas, series, marcas y activaciones existentes.
 - El cierre de sesión del atleta y la retirada del acceso heredado mediante PIN están incompletos.
 - CI, la cobertura E2E, las operaciones de lanzamiento y los procedimientos de recuperación están incompletos.
 
@@ -56,7 +56,7 @@ Decisiones abiertas:
 
 - Gimnasio piloto, grupo de atletas y duración exacta del piloto.
 - Reglas mínimas de desviación que deben ingresar a la bandeja del coach durante el piloto.
-- Si la publicación de un plan es inmutable o admite versionado explícito después del piloto.
+- Política de edición posterior a la publicación más allá de las instantáneas de ejecución y el versionado de borradores actuales.
 - Fecha de retirada del PIN heredado y política de migración de atletas.
 - La evolución futura de la identidad podrá refinar detalles, pero debe conservar la dirección visual aprobada y documentada en DESIGN.md.
 
@@ -65,7 +65,7 @@ Decisiones abiertas:
 - El nombre del producto es **Forja**.
 - La comunicación del producto debe ser directa, operativa y basada en la práctica del powerlifting.
 - Forja es la marca principal; la identidad del gimnasio o tenant es secundaria.
-- La dirección visual aprobada es “Sala de competencia”: superficies minerales claras, azul reglamentario, rojo de decisión, reglas nítidas, estados sellados y composición basada en evidencia.
+- La dirección visual aprobada es “Gym Sport / Sala de competencia”: superficies minerales claras, azul reglamentario, rojo reservado para decisiones, reglas nítidas, referencias contenidas a goma/acero/plataforma/tiza y composición basada en tarjetas de entrenamiento y tableros de resultado.
 
 ## Evidencia disponible
 

@@ -1,11 +1,11 @@
 /**
  * lib/scoring.ts
  * Funciones puras, sin dependencias, para poder testearlas aisladas.
- * Wilks 2020 e IPF GL Points — el diferencial "hecho para powerlifting"
+ * Wilks 2020 y Puntos IPF GL, métricas específicas de powerlifting.
  * que discutimos: con bodyweight + categoría + los 3 grandes levantamientos
  * que ya guardamos en `records`, esto sale prácticamente gratis.
  *
- * NOTA: las constantes de IPF GL Points son la aproximación pública de uso
+ * NOTA: las constantes de Puntos IPF GL son la aproximación pública de uso
  * común. Antes de usarlas en un contexto de competencia real, verificar
  * contra la publicación oficial de la IPF.
  */

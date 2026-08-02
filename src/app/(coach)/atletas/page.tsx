@@ -27,13 +27,20 @@ export default async function AtletasPage() {
             {misAtletas.length} atleta{misAtletas.length !== 1 && "s"} en total
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <ExcelImportDialog />
-          <a href="/api/export/atletas">
-            <Button variant="secondary">
-              <FileDown size={15} /> Exportar Excel
-            </Button>
-          </a>
+        <div className="flex items-center gap-2">
+          <details className="relative">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center border border-border-strong bg-surface px-4 text-sm font-semibold text-chalk">
+              Más acciones
+            </summary>
+            <div className="fixed left-4 right-4 z-10 mt-1 w-auto border border-chalk bg-surface p-3 sm:absolute sm:left-auto sm:right-0 sm:w-60">
+              <ExcelImportDialog />
+              <a href="/api/export/atletas" className="mt-2 block">
+                <Button variant="secondary" className="w-full justify-start">
+                  <FileDown size={15} /> Exportar Excel
+                </Button>
+              </a>
+            </div>
+          </details>
           <Link href="/atletas/nuevo">
             <Button>
               <Plus size={16} /> Nuevo atleta
@@ -45,7 +52,7 @@ export default async function AtletasPage() {
       {misAtletas.length === 0 ? (
         <div className="mt-8 border border-dashed border-border-strong bg-surface p-12 text-center">
           <p className="text-sm text-chalk-muted">
-            Todavía no cargaste ningún atleta. Empezá agregando el primero.
+            No hay atletas cargados.
           </p>
           <Link href="/atletas/nuevo">
             <Button className="mt-4">

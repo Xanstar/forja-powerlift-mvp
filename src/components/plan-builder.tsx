@@ -3,13 +3,14 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, ChevronDown } from "lucide-react";
+import { Plus, Trash2, ChevronDown, Copy } from "lucide-react";
 import {
   crearDia,
   crearEjercicio,
   crearSet,
   eliminarEjercicio,
   eliminarDia,
+  duplicarDia,
 } from "@/lib/actions/planning";
 import { fechaInicioSemana, rangoSemana } from "@/lib/calendario";
 import {
@@ -54,11 +55,13 @@ export function PlanBuilder({
   semanas,
   semanasTotal,
   fechaInicio,
+  readOnly = false,
 }: {
   athleteId: string;
   semanas: Semana[];
   semanasTotal: number;
   fechaInicio: Date | null;
+  readOnly?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -69,6 +72,7 @@ export function PlanBuilder({
           semana={semana}
           semanasTotal={semanasTotal}
           fechaInicio={fechaInicio}
+          readOnly={readOnly}
         />
       ))}
     </div>
@@ -80,11 +84,13 @@ function SemanaBlock({
   semana,
   semanasTotal,
   fechaInicio,
+  readOnly,
 }: {
   athleteId: string;
   semana: Semana;
   semanasTotal: number;
   fechaInicio: Date | null;
+  readOnly: boolean;
 }) {
   const [open, setOpen] = useState(true);
   const [nombreDia, setNombreDia] = useState("");
@@ -96,7 +102,7 @@ function SemanaBlock({
     <div className="border-y border-chalk bg-surface">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-5 py-3.5"
+        className="flex min-h-11 w-full items-center justify-between px-5 py-3.5"
       >
         <span className="font-display text-sm font-semibold text-chalk">
           Semana {semana.numero}{" "}
@@ -116,10 +122,10 @@ function SemanaBlock({
       {open && (
         <div className="space-y-4 border-t border-chalk p-5">
           {semana.days.map((dia) => (
-            <DiaBlock key={dia.id} athleteId={athleteId} dia={dia} />
+            <DiaBlock key={dia.id} athleteId={athleteId} dia={dia} readOnly={readOnly} />
           ))}
 
-          <form
+          {!readOnly && <form
             onSubmit={(e) => {
               e.preventDefault();
               if (!nombreDia.trim()) return;
@@ -139,40 +145,72 @@ function SemanaBlock({
             <Button type="submit" size="sm" variant="secondary">
               <Plus size={14} /> Día
             </Button>
-          </form>
+          </form>}
         </div>
       )}
     </div>
   );
 }
 
-function DiaBlock({ athleteId, dia }: { athleteId: string; dia: Dia }) {
+function DiaBlock({ athleteId, dia, readOnly }: { athleteId: string; dia: Dia; readOnly: boolean }) {
   const [, startTransition] = useTransition();
   const [agregando, setAgregando] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
 
   return (
     <div className="border border-border-strong bg-background p-4">
       <div className="mb-3 flex items-center justify-between">
         <h4 className="text-sm font-semibold text-chalk">{dia.nombre}</h4>
-        <button
-          onClick={() =>
-            startTransition(() => {
-              eliminarDia(dia.id, athleteId);
-            })
-          }
-          className="text-chalk-faint hover:text-accent"
-        >
-          <Trash2 size={14} />
-        </button>
+        {!readOnly && <details className="relative">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center px-2 text-xs font-semibold text-chalk-muted hover:text-chalk">
+            Más acciones
+          </summary>
+          <div className="absolute right-0 z-10 w-64 border border-chalk bg-surface p-3">
+            <button
+              type="button"
+              onClick={() => startTransition(() => duplicarDia(dia.id, athleteId))}
+              className="flex min-h-11 w-full items-center gap-2 px-2 text-left text-sm font-semibold text-chalk hover:bg-surface-hover"
+            >
+              <Copy size={14} /> Duplicar día
+            </button>
+            {confirmando ? (
+              <div className="mt-2 border-t border-border pt-3">
+                <p className="text-xs leading-5 text-chalk-muted">
+                  Se eliminará este día del programa. Si ya tiene ejecución, Forja bloqueará la operación para conservar el historial.
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => startTransition(() => eliminarDia(dia.id, athleteId))}
+                  >
+                    Eliminar día
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setConfirmando(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmando(true)}
+                className="flex min-h-11 w-full items-center gap-2 px-2 text-left text-sm font-semibold text-accent hover:bg-red-50"
+              >
+                <Trash2 size={14} /> Eliminar día
+              </button>
+            )}
+          </div>
+        </details>}
       </div>
 
       <div className="space-y-3">
         {dia.exercises.map((ex) => (
-          <EjercicioBlock key={ex.id} athleteId={athleteId} ejercicio={ex} />
+          <EjercicioBlock key={ex.id} athleteId={athleteId} ejercicio={ex} readOnly={readOnly} />
         ))}
       </div>
 
-      {agregando ? (
+      {!readOnly && (agregando ? (
         <NuevoEjercicioForm
           dayId={dia.id}
           athleteId={athleteId}
@@ -187,7 +225,7 @@ function DiaBlock({ athleteId, dia }: { athleteId: string; dia: Dia }) {
         >
           <Plus size={14} /> Agregar ejercicio
         </Button>
-      )}
+      ))}
     </div>
   );
 }
@@ -226,7 +264,7 @@ function NuevoEjercicioForm({
                     type="button"
                     onClick={() => elegirDelCatalogo(ejercicio)}
                     className={cn(
-                      "min-h-9 border px-3 py-1 text-xs font-semibold transition-colors",
+                      "min-h-11 border px-3 py-1 text-xs font-semibold transition-colors",
                       nombre === ejercicio.nombre
                         ? "border-accent bg-accent text-white"
                         : "border-border-strong bg-background text-chalk-muted hover:border-accent hover:text-accent"
@@ -286,27 +324,44 @@ function NuevoEjercicioForm({
 function EjercicioBlock({
   athleteId,
   ejercicio,
+  readOnly,
 }: {
   athleteId: string;
   ejercicio: Ejercicio;
+  readOnly: boolean;
 }) {
   const [, startTransition] = useTransition();
   const [agregandoSet, setAgregandoSet] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
 
   return (
     <div className="border-t border-border-strong bg-surface p-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-chalk">{ejercicio.nombre}</p>
-        <button
-          onClick={() =>
-            startTransition(() => {
-              eliminarEjercicio(ejercicio.id, athleteId);
-            })
-          }
-          className="text-chalk-faint hover:text-accent"
-        >
-          <Trash2 size={13} />
-        </button>
+        {!readOnly && (confirmando ? (
+          <div className="flex items-center gap-2">
+            <span className="max-w-52 text-xs text-chalk-muted">El historial ejecutado se conserva y puede bloquear este borrado.</span>
+            <button
+              type="button"
+              onClick={() => startTransition(() => eliminarEjercicio(ejercicio.id, athleteId))}
+              className="min-h-11 px-2 text-xs font-semibold text-accent"
+            >
+              Confirmar
+            </button>
+            <button type="button" onClick={() => setConfirmando(false)} className="min-h-11 px-2 text-xs font-semibold text-chalk-muted">
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-label={`Eliminar ${ejercicio.nombre}`}
+            onClick={() => setConfirmando(true)}
+            className="flex min-h-11 items-center gap-1 px-2 text-xs text-chalk-muted hover:text-accent"
+          >
+            <Trash2 size={13} /> Eliminar
+          </button>
+        ))}
       </div>
       {(ejercicio.descanso || ejercicio.observaciones) && (
         <p className="mt-0.5 text-xs text-chalk-faint">
@@ -345,7 +400,7 @@ function EjercicioBlock({
         </table>
       )}
 
-      {agregandoSet ? (
+      {!readOnly && (agregandoSet ? (
         <NuevoSetForm
           exerciseId={ejercicio.id}
           athleteId={athleteId}
@@ -354,11 +409,11 @@ function EjercicioBlock({
       ) : (
         <button
           onClick={() => setAgregandoSet(true)}
-          className="mt-2 text-xs text-chalk-muted hover:text-accent"
+          className="mt-2 inline-flex min-h-11 items-center text-xs text-chalk-muted hover:text-accent"
         >
-          + Agregar sets
+          + Agregar series
         </button>
-      )}
+      ))}
     </div>
   );
 }

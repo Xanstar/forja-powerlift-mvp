@@ -12,6 +12,8 @@ import { NewProgramForm } from "@/components/new-program-form";
 import { ultimosRecords } from "@/lib/actions/records";
 import { EditAthleteForm } from "@/components/edit-athlete-form";
 import { AthleteInvitation } from "@/components/athlete-invitation";
+import { publicarPrograma } from "@/lib/actions/planning";
+import { Button } from "@/components/ui/button";
 
 const LIFT_LABELS: Record<string, string> = {
   sentadilla: "Sentadilla",
@@ -33,8 +35,9 @@ export default async function AtletaDetallePage({
   });
   if (!atleta) notFound();
 
-  const programaActivo = await db.query.programs.findFirst({
-    where: and(eq(programs.athleteId, id), eq(programs.activo, true)),
+  const athletePrograms = await db.query.programs.findMany({
+    where: eq(programs.athleteId, id),
+    orderBy: (program, { desc }) => [desc(program.createdAt)],
     with: {
       weeks: {
         with: {
@@ -49,6 +52,10 @@ export default async function AtletaDetallePage({
       },
     },
   });
+  const programaActivo =
+    athletePrograms.find((program) => program.status === "draft") ??
+    athletePrograms.find((program) => program.activo) ??
+    null;
 
   const records = await ultimosRecords(id);
 
@@ -56,7 +63,7 @@ export default async function AtletaDetallePage({
     <div className="max-w-5xl">
       <Link
         href="/atletas"
-        className="mb-4 flex items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
+        className="mb-4 inline-flex min-h-11 items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
       >
         <ArrowLeft size={14} /> Atletas
       </Link>
@@ -79,30 +86,21 @@ export default async function AtletaDetallePage({
         </Link>
       </div>
 
-      <Card className="mt-8 space-y-3 border-y border-steel bg-blue-50">
-        <div className="flex items-start gap-3">
-          <Smartphone size={18} className="shrink-0 text-steel" />
-          <div className="text-sm text-chalk-muted">
-            <p>
-              WhatsApp:{" "}
-              <span className="text-chalk">
-                {atleta.telefonoE164 ?? "Sin teléfono"}
-              </span>
-              {atleta.telefonoVerificadoAt
-                ? " · verificado"
-                : " · pendiente de verificación"}
-            </p>
-            <p className="mt-1 text-xs text-chalk-faint">
-              El PIN legado sigue disponible durante la transición y puede deshabilitarse por configuración.
-            </p>
-          </div>
+      <details className="mt-8 border-y border-steel bg-blue-50">
+        <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-5 font-semibold text-chalk">
+          <Smartphone size={18} className="text-steel" /> Acceso y activación
+          <span className="ml-auto text-xs font-medium text-chalk-muted">
+            {atleta.telefonoVerificadoAt ? "Verificado" : "Pendiente"}
+          </span>
+        </summary>
+        <div className="border-t border-steel px-5 py-4 text-sm text-chalk-muted">
+          <p>WhatsApp: <span className="text-chalk">{atleta.telefonoE164 ?? "Sin teléfono"}</span></p>
+          <p className="mt-1 text-xs">El PIN legado continúa disponible durante la transición.</p>
+          {atleta.telefonoE164 && <div className="mt-3"><AthleteInvitation athleteId={atleta.id} /></div>}
         </div>
-        {atleta.telefonoE164 && (
-          <AthleteInvitation athleteId={atleta.id} />
-        )}
-      </Card>
+      </details>
 
-      <section className="mt-8">
+      <section className="mt-8 border-y border-chalk py-5">
         <h2 className="font-display text-base font-semibold text-chalk">
           Récords (1RM)
         </h2>
@@ -128,10 +126,12 @@ export default async function AtletaDetallePage({
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-3 font-display text-base font-semibold text-chalk">
-          Planificación
-        </h2>
+      <details className="mt-8 border-y border-chalk bg-surface" open={!programaActivo}>
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between px-5 font-display text-lg font-semibold text-chalk">
+          Programa
+          <span className="text-sm font-normal text-chalk-muted">{programaActivo ? `${programaActivo.nombre} · v${programaActivo.version} · ${programaActivo.status === "draft" ? "Borrador" : "Publicado"}` : "Sin programa activo"}</span>
+        </summary>
+        <div className="border-t border-chalk p-5">
 
         {!programaActivo ? (
           <Card className="text-center">
@@ -142,26 +142,40 @@ export default async function AtletaDetallePage({
           </Card>
         ) : (
           <>
-            <p className="mb-3 text-sm text-chalk-muted">
-              Programa activo:{" "}
-              <span className="text-chalk">{programaActivo.nombre}</span>
-            </p>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border-strong pb-4">
+              <p className="text-sm text-chalk-muted">
+                {programaActivo.status === "draft" ? "Borrador" : "Publicado"}: <span className="text-chalk">{programaActivo.nombre} · versión {programaActivo.version}</span>
+              </p>
+              {programaActivo.status === "draft" && (
+                <form action={publicarPrograma.bind(null, programaActivo.id, id)}>
+                  <Button type="submit">Publicar programa</Button>
+                </form>
+              )}
+            </div>
             <PlanBuilder
               athleteId={id}
               semanas={programaActivo.weeks}
               semanasTotal={programaActivo.semanas}
               fechaInicio={programaActivo.fechaInicio}
+              readOnly={programaActivo.status === "published"}
             />
+            {programaActivo.status === "published" && (
+              <details className="mt-4 border-t border-border-strong pt-4">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-steel">
+                  Preparar nuevo borrador
+                </summary>
+                <div className="mt-3"><NewProgramForm athleteId={id} /></div>
+              </details>
+            )}
           </>
         )}
-      </section>
+        </div>
+      </details>
 
-      <section className="mt-10 border-t border-border pt-6">
-        <h2 className="mb-3 font-display text-base font-semibold text-chalk">
-          Perfil del atleta
-        </h2>
-        <EditAthleteForm atleta={atleta} />
-      </section>
+      <details className="mt-8 border-y border-chalk bg-surface">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center px-5 font-display text-lg font-semibold text-chalk">Perfil y datos</summary>
+        <div className="border-t border-chalk p-5"><EditAthleteForm atleta={atleta} /></div>
+      </details>
     </div>
   );
 }

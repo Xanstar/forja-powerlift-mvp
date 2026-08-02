@@ -59,6 +59,7 @@ export function PinPad() {
 
   const tecla = (label: string, onPress: () => void) => (
     <button
+      key={label}
       type="button"
       onClick={onPress}
       disabled={isPending}
@@ -103,7 +104,7 @@ export function PinPad() {
         {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) =>
           tecla(d, () => presionarDigito(d))
         )}
-        <div />
+        <div key="empty" />
         {tecla("0", () => presionarDigito("0"))}
         <button
           type="button"

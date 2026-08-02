@@ -27,16 +27,15 @@ export function LoginForm({ appName }: { appName: string }) {
   return (
     <main className="grid min-h-screen bg-background md:grid-cols-[minmax(0,0.9fr)_minmax(24rem,0.72fr)]">
       <section className="hidden bg-chalk p-10 text-white md:flex md:flex-col md:justify-between">
-        <Link href="/" className="font-display text-2xl font-bold tracking-[-0.04em]">{appName}</Link>
-        <div><span className="competition-stamp border-red-300 text-red-200">Control de coach</span><h1 className="mt-7 max-w-[10ch] font-display text-6xl font-bold leading-[0.9] tracking-[-0.04em]">Decidí con el entrenamiento a la vista.</h1></div>
-        <p className="max-w-md text-sm leading-6 text-white/60">Programación, ejecución, marcas e historial dentro del mismo ciclo operativo.</p>
+        <Link href="/" className="inline-flex min-h-11 items-center font-display text-2xl font-bold tracking-[-0.04em]">{appName}</Link>
+        <h1 className="max-w-[10ch] font-display text-5xl font-bold leading-[0.92] tracking-[-0.04em]">Revisá. Ajustá. Publicá.</h1>
+        <p className="max-w-md text-sm leading-6 text-white/70">Programa y ejecución en el mismo tablero.</p>
       </section>
       <section className="flex min-h-screen flex-col">
-        <header className="flex items-center justify-between border-b border-chalk px-5 py-4 md:hidden"><Link href="/" className="font-display text-xl font-bold">{appName}</Link><Link href="/hoy" className="text-sm font-semibold">Soy atleta</Link></header>
+        <header className="flex items-center justify-between border-b border-chalk px-5 py-4 md:hidden"><Link href="/" className="inline-flex min-h-11 items-center font-display text-xl font-bold">{appName}</Link><Link href="/hoy" className="inline-flex min-h-11 items-center text-sm font-semibold">Soy atleta</Link></header>
         <div className="flex flex-1 items-center px-5 py-12 sm:px-10">
           <div className="w-full max-w-md">
-            <span className="competition-stamp">Acceso autorizado</span>
-            <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em]">Acceso del entrenador</h2>
+            <h2 className="font-display text-4xl font-bold tracking-[-0.04em]">Acceso coach</h2>
             <form onSubmit={handleSubmit} className="competition-sheet mt-8 space-y-5 border-y border-chalk p-5 sm:p-7">
               <div><Label htmlFor="email">Usuario</Label><Input id="email" type="text" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin" required /></div>
               <div><Label htmlFor="password">Contraseña</Label><Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required /></div>

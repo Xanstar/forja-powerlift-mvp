@@ -25,11 +25,7 @@ export function AthleteActivationForm() {
           autoComplete="tel"
           placeholder="+5491112345678"
           required
-          aria-describedby="telefono-ayuda"
         />
-        <p id="telefono-ayuda" className="mt-1.5 text-xs text-chalk-faint">
-          Usá formato internacional E.164: signo +, código de país y número, sin espacios.
-        </p>
       </div>
       <div>
         <Label htmlFor="codigo">Código de 6 dígitos</Label>

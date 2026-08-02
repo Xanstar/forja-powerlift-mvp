@@ -41,9 +41,7 @@ export default async function MarcasPage() {
       <h1 className="font-display text-4xl font-bold tracking-[-0.04em] text-chalk">
         Toma de marcas
       </h1>
-      <p className="mt-1 text-sm text-chalk-muted">
-        Pesaje + los tres levantamientos. Wilks e IPF GL se calculan en vivo.
-      </p>
+      <p className="mt-1 text-sm text-chalk-muted">Cargas vigentes para prescribir y comparar.</p>
 
       <div className="mt-6">
         <MarcasForm atletas={atletas} />

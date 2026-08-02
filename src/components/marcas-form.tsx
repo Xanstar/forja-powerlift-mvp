@@ -9,6 +9,10 @@ import { puntajeWilks, puntajeIpfGl } from "@/lib/scoring";
 import { type Lift } from "@/lib/queries";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import {
+  buildDirtyMarksRows,
+  type DirtyMarks,
+} from "@/lib/marks-dirty";
 
 type AtletaRow = {
   id: string;
@@ -63,27 +67,30 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
   });
   const [guardando, setGuardando] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
+  const [dirtyFields, setDirtyFields] = useState<DirtyMarks>({});
+  const dirty = Object.values(dirtyFields).some(
+    (fields) => Object.keys(fields).length > 0
+  );
 
   function setFila(id: string, patch: Partial<Fila>) {
     setResultado(null);
+    setDirtyFields((current) => ({
+      ...current,
+      [id]: {
+        ...current[id],
+        ...Object.fromEntries(Object.keys(patch).map((key) => [key, true])),
+      },
+    }));
     setFilas((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   }
 
   async function guardar() {
     setGuardando(true);
-    const aGuardar: FilaMarca[] = [];
-    for (const a of atletas) {
-      const f = filas[a.id];
-      if (!f) continue;
-      if (
-        f.peso.trim() ||
-        f.sentadilla.trim() ||
-        f.banca.trim() ||
-        f.peso_muerto.trim()
-      ) {
-        aGuardar.push({ athleteId: a.id, ...f });
-      }
-    }
+    const aGuardar: FilaMarca[] = buildDirtyMarksRows(
+      atletas.map((athlete) => athlete.id),
+      filas,
+      dirtyFields
+    );
     const res = await guardarMarcas(fecha, aGuardar);
     setGuardando(false);
     setResultado(
@@ -91,6 +98,7 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
         res.atletas
       } atleta${res.atletas !== 1 ? "s" : ""}.`
     );
+    setDirtyFields({});
     router.refresh();
   }
 
@@ -119,13 +127,12 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
             id="fecha-marcas"
             type="date"
             value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
+            onChange={(e) => {
+              setFecha(e.target.value);
+            }}
             className="w-44"
           />
         </div>
-        <Button onClick={guardar} disabled={guardando}>
-          {guardando ? "Guardando..." : "Guardar marcas"}
-        </Button>
       </div>
 
       {resultado && (
@@ -134,7 +141,44 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
         </div>
       )}
 
-      <div className="overflow-x-auto border-y border-chalk bg-surface">
+      <div className="space-y-3 md:hidden">
+        {atletas.map((a) => {
+          const f = filas[a.id];
+          const total =
+            (num(f?.sentadilla ?? "") ?? 0) +
+            (num(f?.banca ?? "") ?? 0) +
+            (num(f?.peso_muerto ?? "") ?? 0);
+          return (
+            <section key={a.id} className="border-y border-chalk bg-surface p-4">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="font-semibold text-chalk">{a.nombre} {a.apellido}</h2>
+                <span className="data-number text-lg font-bold text-chalk">{total ? `${fmtKg(total)} kg` : "Sin total"}</span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <label className="text-xs font-semibold text-chalk-muted">
+                  Peso corporal (kg)
+                  <Input type="number" step="0.1" min="0" value={f?.peso ?? ""} onChange={(e) => setFila(a.id, { peso: e.target.value })} className="mt-1 text-right" />
+                </label>
+                <label className="text-xs font-semibold text-chalk-muted">
+                  Tipo
+                  <select value={f?.tipo ?? "real"} onChange={(e) => setFila(a.id, { tipo: e.target.value as "real" | "estimado" })} className="mt-1 w-full border border-border-strong bg-background px-3 text-sm text-chalk">
+                    <option value="real">Real</option>
+                    <option value="estimado">Estimado</option>
+                  </select>
+                </label>
+                {LIFT_INPUTS.map((lift) => (
+                  <label key={lift.key} className={lift.key === "peso_muerto" ? "col-span-2 text-xs font-semibold text-chalk-muted" : "text-xs font-semibold text-chalk-muted"}>
+                    {lift.label} (kg)
+                    <Input type="number" step="0.5" min="0" value={f?.[lift.key] ?? ""} onChange={(e) => setFila(a.id, { [lift.key]: e.target.value })} className="mt-1 text-right" />
+                  </label>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto border-y border-chalk bg-surface md:block">
         <table className="w-full min-w-[880px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-chalk-muted">
@@ -223,6 +267,13 @@ export function MarcasForm({ atletas }: { atletas: AtletaRow[] }) {
           </tbody>
         </table>
       </div>
+      {dirty && (
+        <div className="sticky bottom-0 z-20 border-t border-chalk bg-surface p-3">
+          <Button onClick={guardar} disabled={guardando} className="w-full md:ml-auto md:block md:w-auto">
+            {guardando ? "Guardando..." : "Guardar cambios"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,7 +19,7 @@ export function Sidebar({ nombreEntrenador }: { nombreEntrenador: string }) {
     <>
       <aside className="hidden min-h-screen border-r border-chalk bg-chalk text-white md:flex md:flex-col">
         <div className="border-b border-white/25 px-5 py-6">
-          <Link href="/dashboard" className="font-display text-2xl font-bold tracking-[-0.04em]">Forja</Link>
+          <Link href="/dashboard" className="inline-flex min-h-11 items-center font-display text-2xl font-bold tracking-[-0.04em]">Forja</Link>
           <p className="mt-1 text-xs text-white/60">Panel de coaching</p>
         </div>
         <nav className="flex-1 py-5" aria-label="Navegación del coach">
@@ -43,9 +43,9 @@ export function Sidebar({ nombreEntrenador }: { nombreEntrenador: string }) {
       <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-chalk bg-surface md:hidden" aria-label="Navegación del coach">
         {links.map(({ href, shortLabel, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
-          return <Link key={href} href={href} className={cn("flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-chalk-muted", active && "bg-chalk text-white")}><Icon size={19} aria-hidden="true" />{shortLabel}</Link>;
+          return <Link key={href} href={href} className={cn("flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-semibold text-chalk-muted", active && "bg-chalk text-white")}><Icon size={19} aria-hidden="true" />{shortLabel}</Link>;
         })}
-        <button onClick={() => signOut({ callbackUrl: "/login" })} className="flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-chalk-muted"><LogOut size={19} aria-hidden="true" />Salir</button>
+        <button onClick={() => signOut({ callbackUrl: "/login" })} className="flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-semibold text-chalk-muted"><LogOut size={19} aria-hidden="true" />Salir</button>
       </nav>
     </>
   );

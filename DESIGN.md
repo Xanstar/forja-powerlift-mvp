@@ -39,6 +39,11 @@ spacing:
   md: "20px"
   lg: "40px"
   xl: "80px"
+contentWidth:
+  workout: "48rem"
+  review: "56rem"
+  reading: "72ch"
+  operations: "72rem"
 components:
   button-primary:
     backgroundColor: "{colors.competition-red}"
@@ -65,9 +70,11 @@ components:
 
 ## Overview
 
-**Creative North Star: "Sala de competencia"**
+**Creative North Star: "Gym Sport / Sala de competencia"**
 
 Forja traduce las hojas oficiales de pesaje, los tableros de intentos, las señales de jueces y los sistemas de resultados a un producto digital contemporáneo. La interfaz se siente verificable y operativa: cada regla separa información, cada número merece jerarquía y cada color comunica una decisión.
+
+La evolución Gym Sport lleva esa autoridad a la planta de entrenamiento sin recurrir al estereotipo rojo-negro de culturismo. Papel mineral, navy reglamentario y señales de resultado conviven con referencias contenidas a goma, plataforma, acero galvanizado y tiza. Son materiales y geometrías de trabajo, nunca imágenes falsas ni decoración temática.
 
 La marca Forja siempre domina. La identidad de un gimnasio puede aparecer como contexto secundario, nunca desplazar el nombre ni la gramática visual del producto. Las superficies públicas persuaden mostrando el ciclo operativo; las superficies de coach y atleta priorizan velocidad, evidencia y ergonomía táctil.
 
@@ -132,6 +139,8 @@ El shell coach usa una columna fija de 15rem sólo desde 768px. En móvil desapa
 
 Las superficies atleta son mobile-first. Los controles táctiles miden al menos 44px y la acción de completar entrenamiento permanece accesible en el borde inferior.
 
+El entrenamiento usa `max-width: 48rem`, la revisión `56rem`, la lectura continua `72ch` y las operaciones comparativas hasta `72rem`. Estas medidas evitan que una tarea secuencial se disperse en un lienzo de dashboard.
+
 ## Elevation & Depth
 
 El sistema es plano por defecto. La profundidad proviene de contraste tonal, fondos de papel, reglas y densidad, no de sombras decorativas, blur o vidrio. Los elementos fijos usan una superficie opaca y un borde estructural.
@@ -143,6 +152,28 @@ El sistema es plano por defecto. La profundidad proviene de contraste tonal, fon
 Controles, hojas y contenedores usan esquinas rectas. Los estados se expresan como sellos con borde de 1px y una rotación mínima, mientras los indicadores de avance usan barras rectangulares. Los círculos se reservan para iconografía semántica existente, como completar una serie, cuando la forma también es un objetivo táctil.
 
 ## Components
+
+Los componentes se nombran y componen por tarea, no por apariencia genérica:
+
+- **Decision Queue:** sesiones incompletas, fechas incumplidas, accesos pendientes o marcas insuficientes. El primer asunto es la única acción primaria.
+- **Training Card:** ejercicio con prescripción resuelta, próxima serie dominante, registro u omisión y descanso con unidad.
+- **Result Board:** comparación entre prescripción inmutable y ejecución real, con métricas declaradas.
+- **Program Version Bar:** estado `Borrador` o `Publicado`, número de versión y publicación explícita.
+- **Sync Status:** estado persistente `Sincronizado`, `Pendiente` o `Conflicto`; el color acompaña al texto pero no lo reemplaza.
+- **Action Disclosure:** `Más acciones` aloja importación, exportación, duplicación y tareas secundarias.
+- **Danger Disclosure:** la destrucción requiere apertura deliberada, explicación del impacto histórico y confirmación textual.
+
+### Voice
+
+La voz es español neutral y propia del sector. Para coach, los controles y estados hablan de `programa`, `bloque`, `sesión`, `prescripción`, `desvío`, `pendiente`, `revisar`, `ajustar` y `publicar`. Para atleta, cada pantalla conduce a la siguiente acción física con `serie`, `repeticiones`, `carga`, `descanso`, `hecho`, `omitido` y `próxima serie`. Se eliminan motivación vacía, lenguaje SaaS y explicaciones repetidas.
+
+### Semantic Statuses
+
+- **Pendiente / Informativo:** tinta results-blue con etiqueta textual.
+- **Sincronizado / Cumplido:** approved-green con confirmación textual.
+- **Revisar / Desvío / Conflicto:** competition-red, reservado para decisiones y excepciones reales.
+- **Omitido:** navy secundario; es un resultado explícito, no un error.
+- **Destructivo:** rojo sólo dentro de una confirmación abierta.
 
 ### Buttons
 

@@ -9,7 +9,7 @@ export default function NuevoAtletaPage() {
     <div className="max-w-2xl">
       <Link
         href="/atletas"
-        className="mb-4 flex items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
+        className="mb-4 inline-flex min-h-11 items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
       >
         <ArrowLeft size={14} /> Atletas
       </Link>
