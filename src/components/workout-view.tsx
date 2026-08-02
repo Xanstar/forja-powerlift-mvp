@@ -1,18 +1,24 @@
 "use client";
 
 import { useState, useTransition, useEffect, useRef } from "react";
-import { CheckCircle2, Circle, Timer } from "lucide-react";
+import { CheckCircle2, Circle, Timer, WifiOff } from "lucide-react";
 import { registrarSet, completarDia } from "@/lib/actions/planning";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { encolarSetOffline, sincronizarCola } from "@/lib/offline-queue";
+import {
+  encolarSetOffline,
+  leerCola,
+  leerConflictos,
+  QUEUE_EVENT,
+  sincronizarCola,
+} from "@/lib/offline-queue";
+import {
+  recordWorkoutLog,
+  workoutLogsForSummary,
+  type LocalWorkoutLog,
+} from "@/lib/workout-state";
 
-type SetLog = {
-  id: string;
-  pesoKgReal: number | null;
-  repeticionesReales: number | null;
-  rpeReal: number | null;
-};
+type SetLog = LocalWorkoutLog;
 
 type SetPlan = {
   id: string;
@@ -21,6 +27,8 @@ type SetPlan = {
   pesoTipo: "absoluto" | "porcentaje_rm";
   pesoKg: number | null;
   porcentajeRm: number | null;
+  resolvedWeightKg: number | null;
+  sourceOneRmKg: number | null;
   rpeObjetivo: number | null;
   logs: SetLog[];
 };
@@ -50,6 +58,7 @@ type Dia = {
 function parseDescansoSegundos(s: string | null): number | null {
   if (!s) return null;
   const t = s.trim();
+  if (/^\d+(?:\.\d+)?$/.test(t)) return Math.round(parseFloat(t));
   const mmss = t.match(/^(\d+):([0-5]?\d)$/);
   if (mmss) return parseInt(mmss[1], 10) * 60 + parseInt(mmss[2], 10);
   const minSeg = t.match(/(\d+)\s*min(?:uto)?s?\s*(?:y\s*)?(\d+)?\s*seg(?:undos?)?/i);
@@ -60,9 +69,16 @@ function parseDescansoSegundos(s: string | null): number | null {
   if (min) return parseInt(min[1], 10) * 60;
   const seg = t.match(/(\d+)\s*seg/i);
   if (seg) return parseInt(seg[1], 10);
-  const primerNumero = t.match(/(\d+)/);
-  if (primerNumero) return parseInt(primerNumero[1], 10) * 60;
   return null;
+}
+
+function formatDescansoLabel(value: string | null) {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    return `Descanso: ${Math.round(parseFloat(trimmed))} s`;
+  }
+  return `Descanso: ${trimmed}`;
 }
 
 function formatearTiempo(seg: number): string {
@@ -84,7 +100,7 @@ function compararConPlan(
   reps: boolean;
   rpe: boolean;
 } {
-  const pesoPlan = set.pesoTipo === "absoluto" ? set.pesoKg : null;
+  const pesoPlan = set.resolvedWeightKg;
   const difierePeso =
     pesoReal != null && pesoPlan != null && pesoReal !== pesoPlan;
   const difiereReps =
@@ -111,6 +127,21 @@ export function WorkoutView({
   onCompletado?: () => void;
 }) {
   const [terminado, setTerminado] = useState(completado);
+  const [recorded, setRecorded] = useState<Record<string, "completed" | "skipped">>(
+    () =>
+      Object.fromEntries(
+        dia.exercises.flatMap((exercise) =>
+          exercise.sets.flatMap((set) =>
+            set.logs[0] ? [[set.id, set.logs[0].status] as const] : []
+          )
+        )
+      )
+  );
+  const [localLogs, setLocalLogs] = useState<Record<string, SetLog>>({});
+  const [pendingCount, setPendingCount] = useState(0);
+  const [conflictCount, setConflictCount] = useState(0);
+  const [online, setOnline] = useState(true);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   // Timer de descanso que arranca solo al completar una serie.
@@ -120,11 +151,28 @@ export function WorkoutView({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const sync = () => sincronizarCola(registrarSet);
+    const refreshQueue = () => {
+      setPendingCount(leerCola().length);
+      setConflictCount(leerConflictos().length);
+    };
+    const sync = async () => {
+      setOnline(navigator.onLine);
+      if (!navigator.onLine) return;
+      const result = await sincronizarCola(registrarSet);
+      refreshQueue();
+      if (result.synced > 0) {
+        setSyncMessage(`${result.synced} serie${result.synced === 1 ? "" : "s"} sincronizada${result.synced === 1 ? "" : "s"}.`);
+      }
+    };
+    refreshQueue();
     sync();
     window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+    window.addEventListener(QUEUE_EVENT, refreshQueue);
     return () => {
       window.removeEventListener("online", sync);
+      window.removeEventListener("offline", sync);
+      window.removeEventListener(QUEUE_EVENT, refreshQueue);
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
@@ -182,10 +230,15 @@ export function WorkoutView({
   }
 
   const totalSets = dia.exercises.reduce((acc, e) => acc + e.sets.length, 0);
-  const setsCompletados = dia.exercises.reduce(
-    (acc, e) => acc + e.sets.filter((s) => s.logs.length > 0).length,
-    0
-  );
+  const setsCompletados = Object.keys(recorded).length;
+  const nextPendingId = dia.exercises
+    .flatMap((exercise) => exercise.sets)
+    .find((set) => !recorded[set.id])?.id;
+  const canComplete =
+    totalSets > 0 &&
+    setsCompletados === totalSets &&
+    pendingCount === 0 &&
+    conflictCount === 0;
 
   if (terminado) {
     return (
@@ -204,7 +257,12 @@ export function WorkoutView({
 
         <div className="mt-2 space-y-5">
           {dia.exercises.map((ex) => (
-            <ExerciseLogger key={ex.id} ejercicio={ex} completado />
+            <ExerciseLogger
+              key={ex.id}
+              ejercicio={ex}
+              completado
+              localLogs={localLogs}
+            />
           ))}
         </div>
       </div>
@@ -223,7 +281,7 @@ export function WorkoutView({
           </h1>
         </div>
         <p className="text-xs text-chalk-muted">
-          {setsCompletados}/{totalSets} sets
+          {setsCompletados}/{totalSets} series
         </p>
       </div>
 
@@ -241,6 +299,15 @@ export function WorkoutView({
           <ExerciseLogger
             key={ex.id}
             ejercicio={ex}
+            recorded={recorded}
+            localLogs={localLogs}
+            nextPendingId={nextPendingId}
+            onStatus={(setId, status) =>
+              setRecorded((current) => ({ ...current, [setId]: status }))
+            }
+            onRecorded={(setId, log) =>
+              setLocalLogs((current) => recordWorkoutLog(current, setId, log))
+            }
             onGuardar={(setId) => {
               iniciarDescanso(parseDescansoSegundos(ex.descanso));
               avanzarFoco(setId);
@@ -249,7 +316,20 @@ export function WorkoutView({
         ))}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-chalk bg-surface p-4 pb-6">
+      <div className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-chalk bg-surface p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto mb-2 flex max-w-3xl items-center justify-between text-xs text-chalk-muted" aria-live="polite">
+          <span className="flex items-center gap-1.5">
+            {!online && <WifiOff size={14} aria-hidden="true" />}
+            {conflictCount > 0
+              ? `${conflictCount} conflicto${conflictCount === 1 ? "" : "s"} de sincronización · revisá la serie`
+              : pendingCount > 0
+              ? `${pendingCount} serie${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"} de sincronizar`
+              : online
+                ? syncMessage ?? "Registro sincronizado"
+                : "Sin conexión · los cambios quedarán pendientes"}
+          </span>
+          <span>{setsCompletados}/{totalSets} series</span>
+        </div>
         {restante != null && (
           <div className="mb-3 border border-steel bg-blue-50 p-3">
             <div className="flex items-center justify-between">
@@ -285,6 +365,7 @@ export function WorkoutView({
         <Button
           className="w-full"
           size="lg"
+          disabled={!canComplete}
           onClick={() =>
             startTransition(async () => {
               await completarDia(dia.id);
@@ -293,7 +374,11 @@ export function WorkoutView({
             })
           }
         >
-          Completar entrenamiento
+          {pendingCount > 0
+            ? "Esperando sincronización"
+            : canComplete
+              ? "Completar sesión"
+              : "Registrá u omití cada serie"}
         </Button>
       </div>
     </div>
@@ -304,17 +389,27 @@ function ExerciseLogger({
   ejercicio,
   completado = false,
   onGuardar,
+  recorded = {},
+  localLogs = {},
+  nextPendingId,
+  onStatus,
+  onRecorded,
 }: {
   ejercicio: Ejercicio;
   completado?: boolean;
   onGuardar?: (setId: string) => void;
+  recorded?: Record<string, "completed" | "skipped">;
+  localLogs?: Record<string, SetLog>;
+  nextPendingId?: string;
+  onStatus?: (setId: string, status: "completed" | "skipped") => void;
+  onRecorded?: (setId: string, log: SetLog) => void;
 }) {
   return (
     <section className="border-y border-chalk bg-surface p-4">
       <p className="font-display text-lg font-bold tracking-tight text-chalk">{ejercicio.nombre}</p>
       {(ejercicio.descanso || ejercicio.observaciones) && (
         <p className="mt-0.5 text-xs text-chalk-muted">
-          {[ejercicio.descanso, ejercicio.observaciones]
+          {[formatDescansoLabel(ejercicio.descanso), ejercicio.observaciones]
             .filter(Boolean)
             .join(" · ")}
         </p>
@@ -332,9 +427,16 @@ function ExerciseLogger({
         {ejercicio.sets.map((set) => (
           <SetRow
             key={set.id}
-            set={set}
+            set={{
+              ...set,
+              logs: workoutLogsForSummary(set.logs, localLogs[set.id]),
+            }}
             completado={completado}
             onGuardar={onGuardar}
+            recordedStatus={recorded[set.id]}
+            dominant={nextPendingId === set.id}
+            onStatus={onStatus}
+            onRecorded={onRecorded}
           />
         ))}
       </div>
@@ -346,15 +448,25 @@ function SetRow({
   set,
   completado = false,
   onGuardar,
+  recordedStatus,
+  dominant = false,
+  onStatus,
+  onRecorded,
 }: {
   set: SetPlan;
   completado?: boolean;
   onGuardar?: (setId: string) => void;
+  recordedStatus?: "completed" | "skipped";
+  dominant?: boolean;
+  onStatus?: (setId: string, status: "completed" | "skipped") => void;
+  onRecorded?: (setId: string, log: SetLog) => void;
 }) {
   const yaHecho = set.logs.length > 0;
   const [abierto, setAbierto] = useState(false);
   const [peso, setPeso] = useState(
-    yaHecho ? String(set.logs[0].pesoKgReal ?? "") : String(set.pesoKg ?? "")
+    yaHecho
+      ? String(set.logs[0].pesoKgReal ?? "")
+      : String(set.resolvedWeightKg ?? "")
   );
   const [reps, setReps] = useState(
     yaHecho
@@ -365,15 +477,22 @@ function SetRow({
     yaHecho ? String(set.logs[0].rpeReal ?? "") : ""
   );
   const [guardado, setGuardado] = useState(yaHecho);
+  const [status, setStatus] = useState<"completed" | "skipped" | null>(
+    recordedStatus ?? set.logs[0]?.status ?? null
+  );
+  const [skipReason, setSkipReason] = useState(set.logs[0]?.skipReason ?? "");
+  const [currentMutationId, setCurrentMutationId] = useState(
+    set.logs[0]?.clientMutationId
+  );
   const [guardadoOffline, setGuardadoOffline] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const pesoObjetivo =
-    set.pesoTipo === "absoluto"
-      ? set.pesoKg
-        ? `${set.pesoKg}kg`
-        : "—"
-      : `${set.porcentajeRm}% RM`;
+  const pesoObjetivo = set.resolvedWeightKg != null
+    ? `${set.resolvedWeightKg} kg${set.pesoTipo === "porcentaje_rm" ? ` (${set.porcentajeRm}% de ${set.sourceOneRmKg ?? "—"} kg)` : ""}`
+    : set.pesoTipo === "porcentaje_rm"
+      ? `${set.porcentajeRm}% 1RM · falta marca vigente`
+      : "Carga libre";
 
   const log = set.logs[0];
 
@@ -394,26 +513,49 @@ function SetRow({
         .join(" · ")
     : null;
 
-  async function guardar() {
+  async function guardar(nextStatus: "completed" | "skipped" = "completed") {
+    const clientMutationId = crypto.randomUUID();
     const data = {
       pesoKgReal: peso ? parseFloat(peso) : undefined,
       repeticionesReales: reps ? parseInt(reps, 10) : undefined,
       rpeReal: rpe ? parseFloat(rpe) : undefined,
+      status: nextStatus,
+      skipReason: nextStatus === "skipped" ? skipReason : undefined,
+      clientMutationId,
+      expectedMutationId: currentMutationId,
     };
+    setSaveError(null);
     try {
-      await registrarSet(set.id, data);
+      const result = await registrarSet(set.id, data);
+      if (result.outcome === "conflict") {
+        setSaveError("La serie cambió en otro dispositivo. Recargá antes de volver a guardar.");
+        return;
+      }
       setGuardado(true);
+      setStatus(nextStatus);
+      setCurrentMutationId(clientMutationId);
       setGuardadoOffline(false);
     } catch {
       // Sin señal: lo guardamos en el celular y se sube solo
       // cuando vuelva la conexión (ver offline-queue.ts).
       encolarSetOffline({ plannedSetId: set.id, data });
       setGuardado(true);
+      setStatus(nextStatus);
       setGuardadoOffline(true);
     }
     const recienGuardado = !guardado;
     setAbierto(false);
     if (recienGuardado) onGuardar?.(set.id);
+    onStatus?.(set.id, nextStatus);
+    onRecorded?.(set.id, {
+      id: clientMutationId,
+      pesoKgReal: nextStatus === "completed" ? hechoPeso : null,
+      repeticionesReales: nextStatus === "completed" ? hechoReps : null,
+      rpeReal: nextStatus === "completed" ? hechoRpe : null,
+      status: nextStatus,
+      skipReason: nextStatus === "skipped" ? skipReason || null : null,
+      clientMutationId,
+    });
   }
 
   if (completado) {
@@ -437,7 +579,9 @@ function SetRow({
           <p className="mt-1.5 pl-[26px] text-xs text-chalk-muted">
             Registraste:{" "}
             <span className="text-chalk">
-              {log.pesoKgReal}kg × {log.repeticionesReales}
+              {log.status === "skipped"
+                ? `Omitida${log.skipReason ? ` · ${log.skipReason}` : ""}`
+                : `${log.pesoKgReal ?? "—"} kg × ${log.repeticionesReales ?? "—"}`}
               {log.rpeReal ? ` @ RPE ${log.rpeReal}` : ""}
             </span>
             {compararConPlan(
@@ -464,12 +608,14 @@ function SetRow({
           ? diff.difiere
             ? "border-accent/30 bg-background"
             : "border-success/25 bg-background opacity-60"
-          : "border-border bg-background"
+          : dominant
+            ? "border-steel bg-blue-50"
+            : "border-border bg-background"
       )}
     >
       <div className="flex items-center gap-3">
         <button
-          onClick={() => startTransition(guardar)}
+          onClick={() => startTransition(() => guardar("completed"))}
           aria-label={
             guardado
               ? `Serie ${set.numeroSet} completada`
@@ -486,7 +632,7 @@ function SetRow({
         </button>
 
         <button
-          className="flex flex-1 items-center justify-between text-left"
+          className="flex min-h-11 flex-1 items-center justify-between text-left"
           onClick={() => setAbierto(!abierto)}
         >
           <span
@@ -495,7 +641,8 @@ function SetRow({
               guardado ? "text-chalk/70" : "text-chalk"
             )}
           >
-            Set {set.numeroSet} ·{" "}
+            {dominant && <strong className="mr-1 text-steel">Próxima serie</strong>}
+            Serie {set.numeroSet} ·{" "}
             <span className="font-medium">
               {set.repeticionesObjetivo} reps
             </span>{" "}
@@ -535,10 +682,10 @@ function SetRow({
           </div>
           <div className="mt-2 flex items-center gap-2">
             <button
-              onClick={() => startTransition(guardar)}
+              onClick={() => startTransition(() => guardar("completed"))}
               className="min-h-11 flex-1 border border-accent bg-accent py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
             >
-              Guardar serie
+              Hecho
             </button>
             <button
               type="button"
@@ -548,15 +695,37 @@ function SetRow({
               Cerrar
             </button>
           </div>
+          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
+            <input
+              value={skipReason}
+              onChange={(event) => setSkipReason(event.target.value)}
+              placeholder="Motivo opcional"
+              aria-label="Motivo para omitir la serie"
+              className="border border-border-strong bg-surface px-3 py-2 text-sm text-chalk"
+            />
+            <button
+              type="button"
+              onClick={() => startTransition(() => guardar("skipped"))}
+              className="min-h-11 border border-border-strong px-3 py-2 text-sm font-semibold text-chalk-muted hover:border-chalk hover:text-chalk"
+            >
+              Omitir serie
+            </button>
+          </div>
           {guardadoOffline && (
-            <p className="mt-2 text-center text-[11px] text-chalk-muted">
+            <p className="mt-2 text-center text-xs text-chalk-muted">
               Guardado en el celular · se sincroniza cuando vuelva la señal
             </p>
           )}
+          {saveError && <p role="alert" className="mt-2 text-xs font-semibold text-accent">{saveError}</p>}
         </div>
       )}
 
-      {guardado && !abierto && diff.difiere && (
+      {guardado && status === "skipped" && !abierto && (
+        <p className="mt-2 pl-[52px] text-xs font-semibold text-chalk-muted">
+          Omitida{skipReason ? ` · ${skipReason}` : ""}
+        </p>
+      )}
+      {guardado && status !== "skipped" && !abierto && diff.difiere && (
         <p className="mt-2 pl-[52px] text-xs">
           <span className="text-chalk-muted">Hecho: </span>
           <span className="font-medium text-accent">

@@ -36,12 +36,17 @@ export type DiaAtleta = {
       pesoTipo: "absoluto" | "porcentaje_rm";
       pesoKg: number | null;
       porcentajeRm: number | null;
+      resolvedWeightKg: number | null;
+      sourceOneRmKg: number | null;
       rpeObjetivo: number | null;
       logs: {
         id: string;
         pesoKgReal: number | null;
         repeticionesReales: number | null;
         rpeReal: number | null;
+        status: "completed" | "skipped";
+        skipReason: string | null;
+        clientMutationId: string;
       }[];
     }[];
   }[];
@@ -138,14 +143,9 @@ export function AthleteHome({
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-success bg-surface text-success">
                     <Trophy size={20} />
                   </div>
-                  <div>
-                    <p className="text-xs text-chalk-muted">
-                      Programa completado
-                    </p>
-                    <p className="font-display text-lg font-bold text-chalk">
-                      ¡Buen trabajo!
-                    </p>
-                  </div>
+                  <p className="font-display text-lg font-bold text-chalk">
+                    Programa completado
+                  </p>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
@@ -153,11 +153,8 @@ export function AthleteHome({
                     <ChevronRight size={20} />
                   </div>
                   <div className="min-w-0">
-                    <p className="data-label">
-                      Próximo entrenamiento
-                    </p>
                     <p className="truncate font-display text-lg font-bold text-chalk">
-                      {proximo.nombre} · Semana {proximo.semanaNumero}
+                      Próxima sesión: {proximo.nombre} · Semana {proximo.semanaNumero}
                     </p>
                   </div>
                   <p className="ml-auto shrink-0 text-xs font-medium text-chalk-muted">
@@ -248,7 +245,7 @@ export function AthleteHome({
             </div>
           )}
 
-          <div className="px-4 py-5">
+          <div className="mx-auto max-w-3xl px-4 py-5">
             {diaActual ? (
               <WorkoutView
                 dia={diaActual}
@@ -258,7 +255,7 @@ export function AthleteHome({
               />
             ) : (
               <div className="px-4 py-16 text-center text-sm text-chalk-muted">
-                No tenés entrenamientos pendientes por ahora. ¡Buen descanso!
+                No hay sesiones pendientes.
               </div>
             )}
           </div>

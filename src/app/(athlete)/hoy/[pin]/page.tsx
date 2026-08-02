@@ -7,8 +7,11 @@ import {
   exercises,
   plannedSets,
   setLogs,
+  executionSets,
+  records,
+  dayExecutions,
 } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { AthleteHome } from "@/components/athlete-home";
 import {
   fechaInicioSemana,
@@ -16,6 +19,7 @@ import {
 } from "@/lib/calendario";
 import { normalizarNombre, capitalizarNombre } from "@/lib/nombres";
 import { athleteForAccessPin } from "@/lib/server-authorization";
+import { liftForExercise, resolvePrescriptionKg } from "@/lib/execution";
 
 type LogHistorico = {
   dayId: string;
@@ -36,7 +40,11 @@ export default async function HoyPage({
   if (!atleta) notFound();
 
   const programaActivo = await db.query.programs.findFirst({
-    where: and(eq(programs.athleteId, atleta.id), eq(programs.activo, true)),
+    where: and(
+      eq(programs.athleteId, atleta.id),
+      eq(programs.activo, true),
+      eq(programs.status, "published")
+    ),
     with: {
       weeks: {
         orderBy: (w, { asc }) => [asc(w.numero)],
@@ -61,22 +69,39 @@ export default async function HoyPage({
     },
   });
 
-  // Historial de sets con peso, para el "última vez" contextual por ejercicio.
+  const [executionRows, completedDays, recordRows] = await Promise.all([
+    db.query.executionSets.findMany({
+      where: eq(executionSets.athleteId, atleta.id),
+      orderBy: [desc(executionSets.recordedAt)],
+    }),
+    db.query.dayExecutions.findMany({
+      where: eq(dayExecutions.athleteId, atleta.id),
+    }),
+    db.query.records.findMany({
+      where: eq(records.athleteId, atleta.id),
+      orderBy: [desc(records.fecha)],
+    }),
+  ]);
+  const executionBySet = new Map(
+    executionRows.map((row) => [row.sourcePlannedSetId, row])
+  );
+  const completedDayIds = new Set(completedDays.map((row) => row.sourceDayId));
+  const currentRecords = new Map<string, number>();
+  for (const record of recordRows) {
+    if (!currentRecords.has(record.lift)) currentRecords.set(record.lift, record.valorKg);
+  }
+
+  // Historial inmutable para el contexto de la última sesión del ejercicio.
   const logsHistoricos: LogHistorico[] = await db
     .select({
-      dayId: days.id,
-      ejercicio: exercises.nombre,
-      peso: setLogs.pesoKgReal,
-      reps: setLogs.repeticionesReales,
-      fecha: setLogs.completadoEn,
+      dayId: executionSets.sourceDayId,
+      ejercicio: executionSets.exerciseName,
+      peso: executionSets.actualWeightKg,
+      reps: executionSets.actualReps,
+      fecha: executionSets.recordedAt,
     })
-    .from(setLogs)
-    .innerJoin(plannedSets, eq(setLogs.plannedSetId, plannedSets.id))
-    .innerJoin(exercises, eq(plannedSets.exerciseId, exercises.id))
-    .innerJoin(days, eq(exercises.dayId, days.id))
-    .innerJoin(weeks, eq(days.weekId, weeks.id))
-    .innerJoin(programs, eq(weeks.programId, programs.id))
-    .where(eq(programs.athleteId, atleta.id));
+    .from(executionSets)
+    .where(eq(executionSets.athleteId, atleta.id));
 
   // Última sesión (día) de un ejercicio, excluyendo el día actual.
   // Los ejercicios se asocian por nombre normalizado (sin mayúsculas ni
@@ -136,28 +161,56 @@ export default async function HoyPage({
       nombre: capitalizarNombre(dia.nombre),
       semanaNumero: semana.numero,
       etiquetaSemana: etiquetaSemana(semana.numero, fechaSemana),
-      completado: dia.completions.length > 0,
+      completado:
+        completedDayIds.has(dia.id) || dia.completions.length > 0,
       exercises: dia.exercises.map((ex) => ({
         id: ex.id,
         nombre: capitalizarNombre(ex.nombre),
         descanso: ex.descanso,
         observaciones: ex.observaciones,
         ultimaVez: ultimaVezDe(ex.nombre, dia.id),
-        sets: ex.sets.map((s) => ({
-          id: s.id,
-          numeroSet: s.numeroSet,
-          repeticionesObjetivo: s.repeticionesObjetivo,
-          pesoTipo: s.pesoTipo,
-          pesoKg: s.pesoKg,
-          porcentajeRm: s.porcentajeRm,
-          rpeObjetivo: s.rpeObjetivo,
-          logs: s.logs.map((l) => ({
-            id: l.id,
-            pesoKgReal: l.pesoKgReal,
-            repeticionesReales: l.repeticionesReales,
-            rpeReal: l.rpeReal,
-          })),
-        })),
+        sets: ex.sets.map((s) => {
+          const execution = executionBySet.get(s.id);
+          const lift = liftForExercise(ex.nombre);
+          const sourceOneRmKg = lift ? currentRecords.get(lift) ?? null : null;
+          const resolvedWeightKg =
+            execution?.prescribedWeightKg ??
+            (s.pesoTipo === "porcentaje_rm"
+              ? resolvePrescriptionKg(s.porcentajeRm, sourceOneRmKg)
+              : s.pesoKg);
+          return {
+            id: s.id,
+            numeroSet: s.numeroSet,
+            repeticionesObjetivo: s.repeticionesObjetivo,
+            pesoTipo: s.pesoTipo,
+            pesoKg: s.pesoKg,
+            porcentajeRm: s.porcentajeRm,
+            resolvedWeightKg,
+            sourceOneRmKg,
+            rpeObjetivo: s.rpeObjetivo,
+            logs: execution
+              ? [
+                  {
+                    id: execution.id,
+                    pesoKgReal: execution.actualWeightKg,
+                    repeticionesReales: execution.actualReps,
+                    rpeReal: execution.actualRpe,
+                    status: execution.status,
+                    skipReason: execution.skipReason,
+                    clientMutationId: execution.clientMutationId,
+                  },
+                ]
+              : s.logs.map((l) => ({
+                  id: l.id,
+                  pesoKgReal: l.pesoKgReal,
+                  repeticionesReales: l.repeticionesReales,
+                  rpeReal: l.rpeReal,
+                  status: "completed" as const,
+                  skipReason: null,
+                  clientMutationId: `legacy-${l.id}`,
+                })),
+          };
+        }),
       })),
     }));
   });

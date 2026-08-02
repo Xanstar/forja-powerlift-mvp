@@ -9,14 +9,22 @@ import {
   plannedSets,
   dayCompletions,
   setLogs,
+  executionSets,
+  dayExecutions,
+  records,
 } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { capitalizarNombre } from "@/lib/nombres";
 import {
   requireAthleteResource,
   requireCoachResource,
 } from "@/lib/server-authorization";
+import {
+  assertPlanDeletionAllowed,
+  liftForExercise,
+  resolvePrescriptionKg,
+} from "@/lib/execution";
 
 export async function crearPrograma(
   athleteId: string,
@@ -25,15 +33,22 @@ export async function crearPrograma(
   fechaInicio?: Date
 ) {
   await requireCoachResource("athlete", athleteId);
-  // Desactiva programas anteriores: en el MVP solo hay un programa activo por vez
-  await db
-    .update(programs)
-    .set({ activo: false })
-    .where(eq(programs.athleteId, athleteId));
+  const latest = await db.query.programs.findFirst({
+    where: eq(programs.athleteId, athleteId),
+    orderBy: [desc(programs.version)],
+  });
 
   const [p] = await db
     .insert(programs)
-    .values({ athleteId, nombre, semanas, fechaInicio })
+    .values({
+      athleteId,
+      nombre,
+      semanas,
+      fechaInicio,
+      activo: false,
+      status: "draft",
+      version: (latest?.version ?? 0) + 1,
+    })
     .returning();
 
   // Las semanas se crean con el programa: la duración es finita (1..semanas),
@@ -47,6 +62,26 @@ export async function crearPrograma(
 
   revalidatePath(`/atletas/${athleteId}`);
   return p;
+}
+
+export async function publicarPrograma(programId: string, athleteId: string) {
+  await requireCoachResource("athlete", athleteId);
+  const program = await db.query.programs.findFirst({
+    where: and(eq(programs.id, programId), eq(programs.athleteId, athleteId)),
+  });
+  if (!program) throw new Error("Programa inexistente.");
+  await db.transaction(async (tx) => {
+    await tx
+      .update(programs)
+      .set({ activo: false })
+      .where(eq(programs.athleteId, athleteId));
+    await tx
+      .update(programs)
+      .set({ activo: true, status: "published", publishedAt: new Date() })
+      .where(eq(programs.id, programId));
+  });
+  revalidatePath(`/atletas/${athleteId}`);
+  revalidatePath("/hoy");
 }
 
 export async function crearDia(
@@ -135,12 +170,35 @@ export async function crearSet(
 
 export async function eliminarEjercicio(exerciseId: string, athleteId: string) {
   await requireCoachResource("exercise", exerciseId, athleteId);
+  const sourceSets = await db
+    .select({ id: plannedSets.id })
+    .from(plannedSets)
+    .where(eq(plannedSets.exerciseId, exerciseId));
+  const evidence = sourceSets.length
+    ? await db
+        .select({ id: executionSets.id })
+        .from(executionSets)
+        .where(
+          inArray(
+            executionSets.sourcePlannedSetId,
+            sourceSets.map((set) => set.id)
+          )
+        )
+        .limit(1)
+    : [];
+  assertPlanDeletionAllowed(evidence.length);
   await db.delete(exercises).where(eq(exercises.id, exerciseId));
   revalidatePath(`/atletas/${athleteId}`);
 }
 
 export async function eliminarDia(dayId: string, athleteId: string) {
   await requireCoachResource("day", dayId, athleteId);
+  const evidence = await db
+    .select({ id: executionSets.id })
+    .from(executionSets)
+    .where(eq(executionSets.sourceDayId, dayId))
+    .limit(1);
+  assertPlanDeletionAllowed(evidence.length);
   await db.delete(days).where(eq(days.id, dayId));
   revalidatePath(`/atletas/${athleteId}`);
 }
@@ -152,35 +210,230 @@ export async function registrarSet(
     repeticionesReales?: number;
     rpeReal?: number;
     comentario?: string;
+    status?: "completed" | "skipped";
+    skipReason?: string;
+    clientMutationId: string;
+    expectedMutationId?: string;
   },
   revalidateAthleteId?: string
 ) {
-  await requireAthleteResource("plannedSet", plannedSetId);
-  const existente = await db.query.setLogs.findFirst({
-    where: eq(setLogs.plannedSetId, plannedSetId),
-    orderBy: [desc(setLogs.completadoEn)],
+  const owner = await requireAthleteResource("plannedSet", plannedSetId);
+  if (!data.clientMutationId || data.clientMutationId.length > 100) {
+    throw new Error("Identificador de escritura inválido.");
+  }
+  const retry = await db.query.executionSets.findFirst({
+    where: eq(executionSets.clientMutationId, data.clientMutationId),
   });
+  if (retry) return { status: retry.status, outcome: "duplicate" as const };
+  const currentExecution = await db.query.executionSets.findFirst({
+    where: eq(executionSets.sourcePlannedSetId, plannedSetId),
+  });
+  if (
+    currentExecution &&
+    currentExecution.clientMutationId !== data.expectedMutationId
+  ) {
+    return { status: currentExecution.status, outcome: "conflict" as const };
+  }
 
-  if (existente) {
+  const source = await db
+    .select({
+      programId: programs.id,
+      programName: programs.nombre,
+      weekNumber: weeks.numero,
+      dayId: days.id,
+      dayName: days.nombre,
+      exerciseName: exercises.nombre,
+      setNumber: plannedSets.numeroSet,
+      targetReps: plannedSets.repeticionesObjetivo,
+      targetRpe: plannedSets.rpeObjetivo,
+      prescriptionType: plannedSets.pesoTipo,
+      weightKg: plannedSets.pesoKg,
+      percentageRm: plannedSets.porcentajeRm,
+    })
+    .from(plannedSets)
+    .innerJoin(exercises, eq(plannedSets.exerciseId, exercises.id))
+    .innerJoin(days, eq(exercises.dayId, days.id))
+    .innerJoin(weeks, eq(days.weekId, weeks.id))
+    .innerJoin(programs, eq(weeks.programId, programs.id))
+    .where(eq(plannedSets.id, plannedSetId))
+    .limit(1);
+  if (!source[0]) throw new Error("Serie planificada inexistente.");
+
+  const lift = liftForExercise(source[0].exerciseName);
+  const currentRecord = lift
+    ? await db.query.records.findFirst({
+        where: and(eq(records.athleteId, owner.athleteId), eq(records.lift, lift)),
+        orderBy: [desc(records.fecha)],
+      })
+    : null;
+  const prescribedWeightKg =
+    source[0].prescriptionType === "absoluto"
+      ? source[0].weightKg
+      : resolvePrescriptionKg(
+          source[0].percentageRm,
+          currentRecord?.valorKg ?? null
+        );
+  const status = data.status ?? "completed";
+  if (status === "completed" && data.repeticionesReales == null) {
+    throw new Error("Registrá las repeticiones o marcá la serie como omitida.");
+  }
+
+  const values = {
+      athleteId: owner.athleteId,
+      sourceProgramId: source[0].programId,
+      sourceDayId: source[0].dayId,
+      sourcePlannedSetId: plannedSetId,
+      clientMutationId: data.clientMutationId,
+      programName: source[0].programName,
+      weekNumber: source[0].weekNumber,
+      dayName: source[0].dayName,
+      exerciseName: source[0].exerciseName,
+      setNumber: source[0].setNumber,
+      targetReps: source[0].targetReps,
+      targetRpe: source[0].targetRpe,
+      prescriptionType: source[0].prescriptionType,
+      prescribedWeightKg,
+      percentageRm: source[0].percentageRm,
+      sourceOneRmKg: currentRecord?.valorKg ?? null,
+      status,
+      skipReason: status === "skipped" ? data.skipReason?.trim() || null : null,
+      actualWeightKg: status === "completed" ? data.pesoKgReal ?? null : null,
+      actualReps: status === "completed" ? data.repeticionesReales ?? null : null,
+      actualRpe: status === "completed" ? data.rpeReal ?? null : null,
+      comment: data.comentario?.trim() || null,
+      recordedAt: new Date(),
+    };
+  if (currentExecution) {
     await db
-      .update(setLogs)
-      .set({ ...data, completadoEn: new Date() })
-      .where(eq(setLogs.id, existente.id));
+      .update(executionSets)
+      .set({
+        clientMutationId: data.clientMutationId,
+        status,
+        skipReason: status === "skipped" ? data.skipReason?.trim() || null : null,
+        actualWeightKg: status === "completed" ? data.pesoKgReal ?? null : null,
+        actualReps: status === "completed" ? data.repeticionesReales ?? null : null,
+        actualRpe: status === "completed" ? data.rpeReal ?? null : null,
+        comment: data.comentario?.trim() || null,
+        recordedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(executionSets.id, currentExecution.id),
+          eq(executionSets.clientMutationId, data.expectedMutationId!)
+        )
+      );
   } else {
-    await db.insert(setLogs).values({
-      plannedSetId,
-      ...data,
-      completadoEn: new Date(),
-    });
+    const inserted = await db
+      .insert(executionSets)
+      .values(values)
+      .onConflictDoNothing()
+      .returning({ id: executionSets.id });
+    if (inserted.length === 0) {
+      return { status, outcome: "conflict" as const };
+    }
   }
 
   if (revalidateAthleteId) {
     revalidatePath(`/atletas/${revalidateAthleteId}`);
   }
+  return { status, outcome: "applied" as const };
 }
 
 export async function completarDia(dayId: string) {
-  await requireAthleteResource("day", dayId);
-  await db.insert(dayCompletions).values({ dayId });
+  const owner = await requireAthleteResource("day", dayId);
+  const sourceSets = await db
+    .select({ id: plannedSets.id })
+    .from(plannedSets)
+    .innerJoin(exercises, eq(plannedSets.exerciseId, exercises.id))
+    .where(eq(exercises.dayId, dayId));
+  const evidence = await db
+    .select({ id: executionSets.id })
+    .from(executionSets)
+    .where(eq(executionSets.sourceDayId, dayId));
+  if (sourceSets.length === 0 || evidence.length !== sourceSets.length) {
+    throw new Error("Registrá u omití cada serie antes de cerrar la sesión.");
+  }
+
+  const source = await db
+    .select({
+      programId: programs.id,
+      programName: programs.nombre,
+      weekNumber: weeks.numero,
+      dayName: days.nombre,
+    })
+    .from(days)
+    .innerJoin(weeks, eq(days.weekId, weeks.id))
+    .innerJoin(programs, eq(weeks.programId, programs.id))
+    .where(eq(days.id, dayId))
+    .limit(1);
+  if (!source[0]) throw new Error("Sesión inexistente.");
+
+  await db
+    .insert(dayExecutions)
+    .values({
+      athleteId: owner.athleteId,
+      sourceProgramId: source[0].programId,
+      sourceDayId: dayId,
+      programName: source[0].programName,
+      weekNumber: source[0].weekNumber,
+      dayName: source[0].dayName,
+    })
+    .onConflictDoNothing({ target: dayExecutions.sourceDayId });
+  const legacyCompletion = await db.query.dayCompletions.findFirst({
+    where: eq(dayCompletions.dayId, dayId),
+  });
+  if (!legacyCompletion) await db.insert(dayCompletions).values({ dayId });
   revalidatePath("/hoy");
+}
+
+export async function duplicarDia(dayId: string, athleteId: string) {
+  await requireCoachResource("day", dayId, athleteId);
+  const source = await db.query.days.findFirst({
+    where: eq(days.id, dayId),
+    with: {
+      exercises: {
+        orderBy: (exercise, { asc }) => [asc(exercise.orden)],
+        with: { sets: { orderBy: (set, { asc }) => [asc(set.numeroSet)] } },
+      },
+    },
+  });
+  if (!source) throw new Error("Día inexistente.");
+  const existing = await db.query.days.findMany({
+    where: eq(days.weekId, source.weekId),
+  });
+  const newDayId = crypto.randomUUID();
+  await db.transaction(async (tx) => {
+    await tx.insert(days).values({
+      id: newDayId,
+      weekId: source.weekId,
+      nombre: `${source.nombre} copia`,
+      orden: existing.length,
+      fecha: null,
+    });
+    for (const exercise of source.exercises) {
+      const newExerciseId = crypto.randomUUID();
+      await tx.insert(exercises).values({
+        id: newExerciseId,
+        dayId: newDayId,
+        nombre: exercise.nombre,
+        orden: exercise.orden,
+        descanso: exercise.descanso,
+        observaciones: exercise.observaciones,
+      });
+      if (exercise.sets.length) {
+        await tx.insert(plannedSets).values(
+          exercise.sets.map((set) => ({
+            exerciseId: newExerciseId,
+            numeroSet: set.numeroSet,
+            repeticionesObjetivo: set.repeticionesObjetivo,
+            pesoTipo: set.pesoTipo,
+            pesoKg: set.pesoKg,
+            porcentajeRm: set.porcentajeRm,
+            rpeObjetivo: set.rpeObjetivo,
+          }))
+        );
+      }
+    }
+  });
+  revalidatePath(`/atletas/${athleteId}`);
 }

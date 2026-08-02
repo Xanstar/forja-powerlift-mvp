@@ -4,12 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import {
   athletes,
-  programs,
-  weeks,
-  days,
-  exercises,
-  plannedSets,
-  setLogs,
+  executionSets,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
@@ -17,6 +12,8 @@ import { EvolutionChart } from "@/components/evolution-chart";
 import { ultimosRecords } from "@/lib/actions/records";
 import { puntajeWilks, puntajeIpfGl, totalDesdeRecords } from "@/lib/scoring";
 import { Card } from "@/components/ui/card";
+import { aggregateSessionProgress } from "@/lib/execution";
+import { capitalizarNombre, normalizarNombre } from "@/lib/nombres";
 
 export default async function HistorialPage({
   params,
@@ -32,39 +29,33 @@ export default async function HistorialPage({
   });
   if (!atleta) notFound();
 
-  // Traemos todos los sets registrados de todos los programas del atleta,
-  // con el nombre del ejercicio y la fecha, para graficar evolución.
   const rows = await db
     .select({
-      ejercicio: exercises.nombre,
-      pesoReal: setLogs.pesoKgReal,
-      repsReales: setLogs.repeticionesReales,
-      rpeReal: setLogs.rpeReal,
-      fecha: setLogs.completadoEn,
+      sourceDayId: executionSets.sourceDayId,
+      exerciseName: executionSets.exerciseName,
+      actualWeightKg: executionSets.actualWeightKg,
+      actualReps: executionSets.actualReps,
+      status: executionSets.status,
+      recordedAt: executionSets.recordedAt,
     })
-    .from(setLogs)
-    .innerJoin(plannedSets, eq(setLogs.plannedSetId, plannedSets.id))
-    .innerJoin(exercises, eq(plannedSets.exerciseId, exercises.id))
-    .innerJoin(days, eq(exercises.dayId, days.id))
-    .innerJoin(weeks, eq(days.weekId, weeks.id))
-    .innerJoin(programs, eq(weeks.programId, programs.id))
-    .where(eq(programs.athleteId, id));
+    .from(executionSets)
+    .where(eq(executionSets.athleteId, id));
 
   const porEjercicio = new Map<
     string,
     { fecha: string; peso: number }[]
   >();
-  for (const r of rows) {
-    if (!r.pesoReal || !r.fecha) continue;
-    const arr = porEjercicio.get(r.ejercicio) ?? [];
+  for (const session of aggregateSessionProgress(rows)) {
+    const key = normalizarNombre(session.exerciseName);
+    const arr = porEjercicio.get(key) ?? [];
     arr.push({
-      fecha: new Date(r.fecha).toLocaleDateString("es-AR", {
+      fecha: session.date.toLocaleDateString("es-AR", {
         day: "2-digit",
         month: "short",
       }),
-      peso: r.pesoReal,
+      peso: session.estimatedOneRmKg,
     });
-    porEjercicio.set(r.ejercicio, arr);
+    porEjercicio.set(key, arr);
   }
 
   const ejerciciosConDatos = Array.from(porEjercicio.entries());
@@ -79,7 +70,7 @@ export default async function HistorialPage({
     <div className="max-w-4xl">
       <Link
         href={`/atletas/${id}`}
-        className="mb-4 flex items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
+        className="mb-4 inline-flex min-h-11 items-center gap-1 text-sm text-chalk-muted hover:text-chalk"
       >
         <ArrowLeft size={14} /> {atleta.nombre} {atleta.apellido}
       </Link>
@@ -88,7 +79,7 @@ export default async function HistorialPage({
         Historial de progreso
       </h1>
       <p className="mt-1 text-sm text-chalk-muted">
-        Evolución de cargas registradas por ejercicio.
+        Mejor e1RM por sesión, calculado con la fórmula de Epley.
       </p>
 
       {puedeCalcularScore && (
@@ -111,7 +102,7 @@ export default async function HistorialPage({
           </Card>
           <Card>
             <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
-              IPF GL Points
+              Puntos IPF GL
             </p>
             <p className="data-number mt-2 text-3xl font-bold text-chalk">
               {puntajeIpfGl(total, atleta.pesoCorporal!, atleta.sexo!)}
@@ -127,7 +118,7 @@ export default async function HistorialPage({
       ) : (
         <div className="mt-6 space-y-6">
           {ejerciciosConDatos.map(([nombre, datos]) => (
-            <EvolutionChart key={nombre} nombre={nombre} datos={datos} />
+            <EvolutionChart key={nombre} nombre={capitalizarNombre(nombre)} datos={datos} metricLabel="e1RM de sesión" />
           ))}
         </div>
       )}

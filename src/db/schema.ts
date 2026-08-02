@@ -103,6 +103,11 @@ export const programs = sqliteTable("programs", {
   fechaInicio: integer("fecha_inicio", { mode: "timestamp" }), // lunes de la semana 1 (base del calendario del atleta)
   semanas: integer("semanas").notNull().default(4), // duración del programa (lista finita, no infinito)
   activo: integer("activo", { mode: "boolean" }).notNull().default(true),
+  status: text("status", { enum: ["draft", "published"] })
+    .notNull()
+    .default("draft"),
+  version: integer("version").notNull().default(1),
+  publishedAt: integer("published_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -178,6 +183,52 @@ export const dayCompletions = sqliteTable("day_completions", {
     .notNull()
     .references(() => days.id, { onDelete: "cascade" }),
   completadoEn: integer("completado_en", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+// Immutable execution evidence. Source IDs are intentionally not foreign keys:
+// editing or retiring a plan must never rewrite completed training history.
+export const executionSets = sqliteTable("execution_sets", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  athleteId: text("athlete_id").notNull(),
+  sourceProgramId: text("source_program_id").notNull(),
+  sourceDayId: text("source_day_id").notNull(),
+  sourcePlannedSetId: text("source_planned_set_id").notNull().unique(),
+  clientMutationId: text("client_mutation_id").notNull().unique(),
+  programName: text("program_name").notNull(),
+  weekNumber: integer("week_number").notNull(),
+  dayName: text("day_name").notNull(),
+  exerciseName: text("exercise_name").notNull(),
+  setNumber: integer("set_number").notNull(),
+  targetReps: integer("target_reps").notNull(),
+  targetRpe: real("target_rpe"),
+  prescriptionType: text("prescription_type", {
+    enum: ["absoluto", "porcentaje_rm"],
+  }).notNull(),
+  prescribedWeightKg: real("prescribed_weight_kg"),
+  percentageRm: real("percentage_rm"),
+  sourceOneRmKg: real("source_one_rm_kg"),
+  status: text("status", { enum: ["completed", "skipped"] }).notNull(),
+  skipReason: text("skip_reason"),
+  actualWeightKg: real("actual_weight_kg"),
+  actualReps: integer("actual_reps"),
+  actualRpe: real("actual_rpe"),
+  comment: text("comment"),
+  recordedAt: integer("recorded_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+export const dayExecutions = sqliteTable("day_executions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  athleteId: text("athlete_id").notNull(),
+  sourceProgramId: text("source_program_id").notNull(),
+  sourceDayId: text("source_day_id").notNull().unique(),
+  programName: text("program_name").notNull(),
+  weekNumber: integer("week_number").notNull(),
+  dayName: text("day_name").notNull(),
+  completedAt: integer("completed_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
 });

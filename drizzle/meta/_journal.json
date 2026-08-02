@@ -29,6 +29,20 @@
       "when": 1785538605220,
       "tag": "0003_athlete_whatsapp_activation",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1785624555310,
+      "tag": "0004_tough_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1785625056253,
+      "tag": "0005_lonely_deathbird",
+      "breakpoints": true
     }
   ]
 }

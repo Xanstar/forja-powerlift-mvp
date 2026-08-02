@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { programs, days, weeks, exercises, plannedSets, setLogs } from "@/db/schema";
+import { executionSets } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { ArrowLeft, Dumbbell } from "lucide-react";
 import { EvolutionChart } from "@/components/evolution-chart";
 import { Card } from "@/components/ui/card";
 import { ultimosRecords } from "@/lib/actions/records";
 import { puntajeWilks, puntajeIpfGl, totalDesdeRecords } from "@/lib/scoring";
-import { normalizarNombre, capitalizarNombre } from "@/lib/nombres";
+import { normalizarNombre } from "@/lib/nombres";
 import { athleteForAccessPin } from "@/lib/server-authorization";
+import { aggregateSessionProgress } from "@/lib/execution";
 
 const NOMBRES_LIFT: Record<string, string> = {
   sentadilla: "Sentadilla",
@@ -29,45 +30,28 @@ export default async function ProgresoPage({
 
   const rows = await db
     .select({
-      ejercicio: exercises.nombre,
-      pesoReal: setLogs.pesoKgReal,
-      fecha: setLogs.completadoEn,
+      sourceDayId: executionSets.sourceDayId,
+      exerciseName: executionSets.exerciseName,
+      actualWeightKg: executionSets.actualWeightKg,
+      actualReps: executionSets.actualReps,
+      status: executionSets.status,
+      recordedAt: executionSets.recordedAt,
     })
-    .from(setLogs)
-    .innerJoin(plannedSets, eq(setLogs.plannedSetId, plannedSets.id))
-    .innerJoin(exercises, eq(plannedSets.exerciseId, exercises.id))
-    .innerJoin(days, eq(exercises.dayId, days.id))
-    .innerJoin(weeks, eq(days.weekId, weeks.id))
-    .innerJoin(programs, eq(weeks.programId, programs.id))
-    .where(eq(programs.athleteId, atleta.id));
+    .from(executionSets)
+    .where(eq(executionSets.athleteId, atleta.id));
 
-  const porEjercicio = new Map<
-    string,
-    { nombre: string; puntos: { fecha: string; peso: number }[] }
-  >();
-  for (const r of rows) {
-    if (!r.pesoReal || !r.fecha) continue;
-    // Agrupa por nombre normalizado: "SENTADILLA" y "Sentadilla" son lo mismo.
-    const clave = normalizarNombre(r.ejercicio);
-    const e =
-      porEjercicio.get(clave) ?? {
-        nombre: capitalizarNombre(r.ejercicio),
-        puntos: [],
-      };
-    e.puntos.push({
-      fecha: new Date(r.fecha).toLocaleDateString("es-AR", {
-        day: "2-digit",
-        month: "short",
-      }),
-      peso: r.pesoReal,
+  const sessions = aggregateSessionProgress(rows);
+  const porEjercicio = new Map<string, { nombre: string; puntos: { fecha: string; peso: number }[] }>();
+  for (const session of sessions) {
+    const key = normalizarNombre(session.exerciseName);
+    const current = porEjercicio.get(key) ?? { nombre: session.exerciseName, puntos: [] };
+    current.puntos.push({
+      fecha: session.date.toLocaleDateString("es-AR", { day: "2-digit", month: "short" }),
+      peso: session.estimatedOneRmKg,
     });
-    porEjercicio.set(clave, e);
+    porEjercicio.set(key, current);
   }
-
-  const ejerciciosConDatos = Array.from(porEjercicio.values()).map((e) => [
-    e.nombre,
-    e.puntos,
-  ] as const);
+  const ejerciciosConDatos = [...porEjercicio.values()];
 
   const records = await ultimosRecords(atleta.id);
   const lifts = ["sentadilla", "banca", "peso_muerto"] as const;
@@ -97,7 +81,7 @@ export default async function ProgresoPage({
           {atleta.nombre} {atleta.apellido}
         </h1>
         <p className="mt-1 text-sm text-chalk-muted">
-          Así va tu fuerza semana a semana.
+          Mejor e1RM por sesión, calculado con la fórmula de Epley.
         </p>
 
         <div className="mt-6 grid grid-cols-3 border-y border-chalk">
@@ -105,14 +89,14 @@ export default async function ProgresoPage({
             const rec = records[lift];
             return (
               <Card key={lift} className="border-0 border-r border-chalk bg-transparent p-3 last:border-r-0">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-chalk-muted">
+                <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
                   {NOMBRES_LIFT[lift]}
                 </p>
                 <p className="data-number mt-1.5 text-2xl font-bold text-chalk">
                   {rec ? `${rec.valorKg} kg` : "—"}
                 </p>
                 {rec && (
-                  <p className="mt-0.5 text-[10px] text-chalk-faint">
+                  <p className="mt-0.5 text-xs text-chalk-faint">
                     {rec.tipo === "real" ? "real" : "estimado"}
                   </p>
                 )}
@@ -124,7 +108,7 @@ export default async function ProgresoPage({
         {puedeCalcularScore && (
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <Card className="p-3">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-chalk-muted">
+              <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
                 Total (S+B+P)
               </p>
               <p className="mt-1.5 font-display text-lg font-bold text-chalk">
@@ -132,7 +116,7 @@ export default async function ProgresoPage({
               </p>
             </Card>
             <Card className="p-3">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-chalk-muted">
+              <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
                 Wilks
               </p>
               <p className="mt-1.5 font-display text-lg font-bold text-chalk">
@@ -140,8 +124,8 @@ export default async function ProgresoPage({
               </p>
             </Card>
             <Card className="p-3">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-chalk-muted">
-                IPF GL Points
+              <p className="text-xs font-medium uppercase tracking-wide text-chalk-muted">
+                Puntos IPF GL
               </p>
               <p className="mt-1.5 font-display text-lg font-bold text-chalk">
                 {puntajeIpfGl(total, atleta.pesoCorporal!, atleta.sexo!)}
@@ -152,13 +136,12 @@ export default async function ProgresoPage({
 
         {ejerciciosConDatos.length === 0 ? (
           <div className="mt-8 rounded-xl border border-dashed border-border-strong p-10 text-center text-sm text-chalk-muted">
-            Todavía no hay entrenamientos registrados. ¡Empezá a loggear y tu
-            evolución aparece acá!
+            Todavía no hay sesiones registradas con carga y repeticiones.
           </div>
         ) : (
           <div className="mt-6 space-y-6">
-            {ejerciciosConDatos.map(([nombre, datos]) => (
-              <EvolutionChart key={nombre} nombre={nombre} datos={datos} />
+            {ejerciciosConDatos.map(({ nombre, puntos }) => (
+              <EvolutionChart key={nombre} nombre={nombre} datos={puntos} metricLabel="e1RM de sesión" />
             ))}
           </div>
         )}
