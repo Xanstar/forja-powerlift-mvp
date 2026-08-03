@@ -43,6 +43,13 @@
       "when": 1785625056253,
       "tag": "0005_lonely_deathbird",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1785720774278,
+      "tag": "0006_fluffy_synch",
+      "breakpoints": true
     }
   ]
 }

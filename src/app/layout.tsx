@@ -4,10 +4,15 @@ import { ServiceWorkerRegister } from "@/components/sw-register";
 import { appName } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: `${appName} — Sistema operativo para coaches de powerlifting`,
+  title: {
+    default: `${appName} | Sistema operativo para coaches de powerlifting`,
+    template: `%s | ${appName}`,
+  },
   description:
     "Programá, ejecutá, detectá desvíos, revisá y ajustá el entrenamiento de powerlifting en un solo ciclo.",
   manifest: "/manifest.webmanifest",
+  applicationName: appName,
+  category: "sports",
 };
 
 export const viewport: Viewport = {
@@ -34,11 +39,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen font-sans antialiased">
         {/*
-          THESIS: Forja turns the meet room's evidence system into an operating interface, refusing generic dark SaaS.
-          OWN-WORLD: bone paper, Forja navy, Impulse red, crisp rules, stamps and dominant tabular numerals.
-          STORY: understand the coaching cycle, enter the right role, operate from evidence.
-          FIRST VIEWPORT: Forja and the cycle at left, a live attempt-style operating board at right, actions above the fold.
-          FORM: approved Sala de competencia replacement world; seed key user-pinned-sala-competencia.
+          THESIS: Forja makes coaching continuity visible as five linked competition passes, refusing the disconnected feature catalog.
+          OWN-WORLD: bone operating sheets, Forja navy boards, decision red, sharp rules, stamps and tabular evidence.
+          STORY: see the plan become execution, exception, review and a new version; then request access.
+          FIRST VIEWPORT: the offer and primary action face a synthetic plan-versus-execution board at full working scale.
+          FORM: linked operational passes, fourth grounded structure; seed key 7b344fd5.
           FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
         */}
         <ServiceWorkerRegister />

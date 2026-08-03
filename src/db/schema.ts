@@ -21,6 +21,20 @@ export const coaches = sqliteTable("coaches", {
     .default(sql`(unixepoch())`),
 });
 
+export const accessRequests = sqliteTable("access_requests", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  organization: text("organization"),
+  profile: text("profile", { enum: ["coach", "gym"] }).notNull(),
+  status: text("status", { enum: ["pending", "contacted", "closed"] })
+    .notNull()
+    .default("pending"),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
 // ---------------------------------------------------------------------------
 // ATLETAS
 // ---------------------------------------------------------------------------
