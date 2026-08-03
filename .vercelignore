@@ -5,3 +5,9 @@ sqlite.db
 sqlite.db-shm
 sqlite.db-wal
 .git
+.codegraph
+.atl
+.opencode
+.playwright-mcp
+Imagenes
+/*.png
