@@ -359,15 +359,40 @@ table {
   font-weight: 600;
 }
 
+.hero-mechanism {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  border-left: 1px solid var(--chalk);
+  background: var(--brand-canvas);
+}
+
+.hero-athlete-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--on-brand-border);
+}
+
+.hero-athlete-pair > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero-athlete-pair > img + img {
+  border-left: 1px solid var(--on-brand-border);
+}
+
 .mechanism-board {
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: center;
-  border-left: 1px solid var(--chalk);
+  border: 1px solid var(--on-brand-border);
   background: var(--brand-canvas);
   color: var(--on-brand);
-  padding: clamp(2rem, 5vw, 5rem);
+  margin: clamp(1.25rem, 3vw, 2.5rem);
+  padding: clamp(1.5rem, 3vw, 2.75rem);
 }
 
 .mechanism-head,
@@ -379,6 +404,7 @@ table {
 }
 
 .mechanism-head {
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--on-brand-border);
   padding-bottom: 1rem;
   color: var(--on-brand-muted);
@@ -547,7 +573,7 @@ table {
 
 .story-scene {
   display: grid;
-  min-height: min(80svh, 48rem);
+  min-height: 34rem;
   grid-template-columns: 5rem minmax(0, 1fr);
   align-content: center;
   border-bottom: 1px solid var(--chalk);
@@ -594,6 +620,80 @@ table {
   line-height: 1.75;
 }
 
+.story-visual {
+  position: relative;
+  grid-column: 2;
+  margin-top: clamp(2rem, 5vw, 4rem);
+}
+
+.story-photo-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--chalk);
+  background: var(--brand-canvas);
+}
+
+.story-photo-pair img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.story-photo-pair img + img {
+  border-left: 1px solid var(--chalk);
+}
+
+.scene-product-overlay {
+  width: 100%;
+  margin-top: 1rem;
+  border: 1px solid var(--on-brand-border);
+  background: var(--brand-canvas);
+  color: var(--on-brand);
+}
+
+.scene-product-overlay > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 1rem;
+  border-bottom: 1px solid var(--on-brand-border);
+  padding: 0.8rem 1rem;
+}
+
+.scene-product-overlay span,
+.scene-product-overlay p {
+  color: var(--on-brand-muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.scene-product-overlay span {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.scene-product-overlay strong {
+  font-size: clamp(0.82rem, 1.4vw, 1.05rem);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.scene-product-overlay > div:nth-child(2) strong {
+  color: #f2aeae;
+}
+
+.scene-product-overlay p {
+  padding: 0.75rem 1rem;
+}
+
+.story-visual figcaption {
+  margin-top: 1rem;
+  color: var(--chalk-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
 .scene-evidence {
   grid-column: 2;
   display: flex;
@@ -619,6 +719,11 @@ table {
   display: grid;
   grid-template-columns: minmax(19rem, 0.75fr) minmax(0, 1.25fr);
   border-bottom: 1px solid var(--chalk);
+}
+
+.continuity-section {
+  background: var(--surface);
+  box-shadow: inset 0 0.5rem 0 var(--brand-canvas);
 }
 
 .continuity-section > div:first-child,
@@ -676,6 +781,8 @@ table {
 .roles-section {
   padding: clamp(3rem, 8vw, 8rem) clamp(1.25rem, 6vw, 6rem);
   border-bottom: 1px solid var(--chalk);
+  background: color-mix(in srgb, var(--background) 88%, var(--surface));
+  box-shadow: inset 0 0.5rem 0 var(--chalk);
 }
 
 .roles-grid {
@@ -907,10 +1014,10 @@ table {
 }
 
 @supports (animation-timeline: view()) {
-  .story-scene .scene-copy {
-    animation: scene-resolve linear both;
+  .scene-product-overlay {
+    animation: record-resolve cubic-bezier(0.16, 1, 0.3, 1) both;
     animation-timeline: view();
-    animation-range: entry 10% cover 45%;
+    animation-range: entry 0% cover 38%;
   }
 
   .mechanism-track span {
@@ -919,14 +1026,69 @@ table {
   }
 }
 
-@keyframes scene-resolve {
-  from { clip-path: inset(0 12% 0 0); opacity: 0.65; }
+@keyframes record-resolve {
+  from { clip-path: inset(0 12% 0 0); opacity: 0.78; transform: translateY(0.75rem); }
   to { clip-path: inset(0); opacity: 1; }
 }
 
 @keyframes track-pass {
   from { background: var(--on-brand-border); transform: scaleX(0); transform-origin: left; }
   to { background: var(--accent); transform: scaleX(1); transform-origin: left; }
+}
+
+@media (max-width: 1179px) {
+  .landing-hero {
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-mechanism {
+    border-top: 1px solid var(--chalk);
+    border-left: 0;
+  }
+
+  .hero-athlete-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-photo-secondary {
+    display: none !important;
+  }
+
+  .landing-story,
+  .continuity-section,
+  .access-section {
+    grid-template-columns: 1fr;
+  }
+
+  .story-scenes,
+  .continuity-board,
+  .access-form,
+  .access-form-success {
+    border-top: 1px solid var(--chalk);
+    border-left: 0;
+  }
+
+  .story-scene {
+    min-height: auto;
+    grid-template-columns: 4rem minmax(0, 1fr);
+  }
+
+  .story-photo-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .story-photo-pair .scene-photo-secondary {
+    display: none;
+  }
+
+  .story-visual-deadlift .scene-photo-primary {
+    display: none;
+  }
+
+  .story-visual-deadlift .scene-photo-secondary {
+    display: block;
+  }
 }
 
 @media (max-width: 767px) {
@@ -980,9 +1142,12 @@ table {
     font-size: clamp(3rem, 14vw, 4.5rem);
   }
 
+  .hero-mechanism {
+    align-content: start;
+  }
+
   .mechanism-board {
-    border-top: 1px solid var(--chalk);
-    border-left: 0;
+    margin: 1.25rem;
   }
 
   .mechanism-head,
@@ -1009,24 +1174,27 @@ table {
     border-bottom: 0;
   }
 
-  .landing-story,
-  .continuity-section,
-  .access-section {
-    grid-template-columns: 1fr;
-  }
-
-  .story-scenes,
-  .continuity-board,
-  .access-form,
-  .access-form-success {
-    border-top: 1px solid var(--chalk);
-    border-left: 0;
-  }
-
   .story-scene {
-    min-height: auto;
     grid-template-columns: 2.5rem minmax(0, 1fr);
     padding: 3rem 1.25rem;
+  }
+
+  .story-visual {
+    grid-column: 1 / -1;
+    margin-top: 2.5rem;
+  }
+
+  .scene-product-overlay {
+    margin-top: 1rem;
+  }
+
+  .scene-product-overlay > div {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .scene-product-overlay strong {
+    text-align: left;
   }
 
   .scene-copy h3 {
@@ -1101,7 +1269,9 @@ table {
   }
 
   .story-scene .scene-copy,
+  .scene-product-overlay,
   .mechanism-track span {
+    animation: none !important;
     clip-path: none;
     opacity: 1;
     transform: none;
