@@ -73,11 +73,11 @@ test("same-owner coach and athlete operations remain authorized", async () => {
 
 test("athlete credentials are signed, expire, and reject tampering", () => {
   const now = Date.UTC(2026, 6, 31);
-  const credential = createAthleteCredential("athlete-a", "test-secret", now);
-  assert.equal(
-    verifyAthleteCredential(credential, "test-secret", now),
-    "athlete-a"
-  );
+  const credential = createAthleteCredential("athlete-a", 4, "test-secret", now);
+  assert.deepEqual(verifyAthleteCredential(credential, "test-secret", now), {
+    athleteId: "athlete-a",
+    credentialVersion: 4,
+  });
   assert.equal(
     verifyAthleteCredential(
       credential.replace("athlete-a", "athlete-b"),
@@ -88,6 +88,10 @@ test("athlete credentials are signed, expire, and reject tampering", () => {
   );
   assert.equal(
     verifyAthleteCredential(credential, "test-secret", now + 9 * 60 * 60 * 1000),
+    null
+  );
+  assert.equal(
+    verifyAthleteCredential(credential.replace(".4.", ".5."), "test-secret", now),
     null
   );
 });

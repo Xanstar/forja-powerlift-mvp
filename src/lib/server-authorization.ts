@@ -20,11 +20,13 @@ import {
   type ResourceOwnership,
 } from "@/lib/ownership";
 import {
+  ATHLETE_ACCESS_COOKIE,
+  clearAthleteCredentialCookie,
   createAthleteCredential,
   verifyAthleteCredential,
 } from "@/lib/athlete-credential";
+import { athleteForCredentialClaims } from "@/lib/athlete-access-token";
 
-const ATHLETE_COOKIE = "forja-athlete-access";
 const ATHLETE_COOKIE_MAX_AGE = 8 * 60 * 60;
 
 function secret() {
@@ -134,10 +136,13 @@ export async function requireCoachResourceAs(
   return ownership.requireCoach(coachId, kind, resourceId, expectedAthleteId);
 }
 
-export async function establishAthleteAccess(athleteId: string) {
+export async function establishAthleteAccess(
+  athleteId: string,
+  credentialVersion = 0
+) {
   (await cookies()).set(
-    ATHLETE_COOKIE,
-    createAthleteCredential(athleteId, secret()),
+    ATHLETE_ACCESS_COOKIE,
+    createAthleteCredential(athleteId, credentialVersion, secret()),
     {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -148,12 +153,19 @@ export async function establishAthleteAccess(athleteId: string) {
   );
 }
 
+export async function clearAthleteAccess() {
+  clearAthleteCredentialCookie(await cookies());
+}
+
 export async function getAthleteCredentialId() {
-  const value = (await cookies()).get(ATHLETE_COOKIE)?.value;
+  const value = (await cookies()).get(ATHLETE_ACCESS_COOKIE)?.value;
   const configuredSecret = process.env.AUTH_SECRET;
-  return configuredSecret
+  const claims = configuredSecret
     ? verifyAthleteCredential(value, configuredSecret)
     : null;
+  if (!claims) return null;
+  const athlete = await athleteForCredentialClaims(db, claims);
+  return athlete?.id ?? null;
 }
 
 export async function requireAthleteResource(
@@ -173,6 +185,13 @@ export async function athleteForAccessPin(pin: string) {
   return db.query.athletes.findFirst({
     where: and(eq(athletes.id, athleteId), eq(athletes.accessPin, pin)),
   });
+}
+
+export async function athleteForCredential() {
+  const athleteId = await getAthleteCredentialId();
+  return athleteId
+    ? db.query.athletes.findFirst({ where: eq(athletes.id, athleteId) })
+    : null;
 }
 
 export async function requireRecordAccess(athleteId: string) {
