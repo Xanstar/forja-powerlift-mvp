@@ -12,6 +12,7 @@ import {
   QUEUE_EVENT,
   sincronizarCola,
 } from "@/lib/offline-queue";
+import { dayCompletionOperationId } from "@/lib/day-completion-operation";
 import {
   recordWorkoutLog,
   workoutLogsForSummary,
@@ -142,7 +143,8 @@ export function WorkoutView({
   const [conflictCount, setConflictCount] = useState(0);
   const [online, setOnline] = useState(true);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [completionMessage, setCompletionMessage] = useState<string | null>(null);
+  const [isCompleting, startTransition] = useTransition();
 
   // Timer de descanso que arranca solo al completar una serie.
   const [restante, setRestante] = useState<number | null>(null);
@@ -365,21 +367,52 @@ export function WorkoutView({
         <Button
           className="w-full"
           size="lg"
-          disabled={!canComplete}
+          disabled={!canComplete || isCompleting}
           onClick={() =>
             startTransition(async () => {
-              await completarDia(dia.id);
-              setTerminado(true);
-              onCompletado?.();
+              const clientMutationId = dayCompletionOperationId(dia.id);
+              setCompletionMessage("Guardando finalización...");
+              try {
+                const result = await completarDia(dia.id, clientMutationId);
+                if (result.outcome === "applied" || result.outcome === "duplicate") {
+                  setTerminado(true);
+                  onCompletado?.();
+                  return;
+                }
+                setCompletionMessage(
+                  "La sesión cambió en el servidor. Recargá para reconciliar el estado antes de volver a intentar."
+                );
+              } catch {
+                setCompletionMessage(
+                  "No pudimos confirmar la finalización. Reintentá con conexión; el día conserva la misma identidad de operación."
+                );
+              }
             })
           }
         >
-          {pendingCount > 0
+          {isCompleting
+            ? "Confirmando sesión"
+            : pendingCount > 0
             ? "Esperando sincronización"
             : canComplete
               ? "Completar sesión"
               : "Registrá u omití cada serie"}
         </Button>
+        {completionMessage && (
+          <div className="mt-2 border border-border-strong bg-background p-3 text-sm text-chalk" role="status">
+            <p>{completionMessage}</p>
+            {completionMessage.includes("Recargá") && (
+              <Button
+                className="mt-2"
+                size="sm"
+                variant="secondary"
+                onClick={() => window.location.reload()}
+              >
+                Recargar sesión
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

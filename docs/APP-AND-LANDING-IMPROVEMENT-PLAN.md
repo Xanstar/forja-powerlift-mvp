@@ -641,3 +641,5 @@ Reduce landing content by approximately **25–35%** while preserving the comple
 **Release athlete access hardening through a controlled additive cutover.**
 
 Capture a production recovery point, inspect migration state, apply `0007` only if absent, issue or rotate credentials through activation/coach workflows, and monitor generic failures plus hashed limiter rows. Keep `ATHLETE_LEGACY_PIN_ENABLED=false` by default; enable it only for a bounded migration cohort and turn it off after those athletes receive tokens. This operational unit must remain separate from the locally completed landing release candidate.
+
+Atomic, retry-safe day completion is complete locally in migration `0008` and the day-completion service. Its operation identity is deterministically derived from the immutable day ID, is authorized as an athlete-day command, and does not depend on browser storage. This does not complete the broader session lifecycle, remaining FK/numeric constraints, backup/restore drills, or pilot readiness, and it does not change the production cutover order above.

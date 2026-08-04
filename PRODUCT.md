@@ -44,11 +44,13 @@ Restricciones y brechas conocidas:
 
 - La ejecución persiste instantáneas independientes de programa, día, ejercicio, prescripción resuelta y resultado; modificar o retirar un plan no altera esa evidencia.
 - Las escrituras de series usan identificadores de mutación idempotentes y distinguen confirmación, pendiente y conflicto sin conexión.
-- El cierre de una sesión exige que cada serie esté registrada u omitida explícitamente.
+- El cierre de un día exige igualdad exacta entre las series planificadas y la evidencia terminal, y confirma la instantánea y el marcador compatible en una única transacción.
+- Los reintentos de cierre derivan una identidad determinista del ID inmutable del día, sin depender de almacenamiento del navegador; no es una credencial y la autorización atleta-día se verifica antes de usarla.
 - Los programas admiten borradores versionados y publicación explícita; el programa publicado permanece vigente mientras se prepara otro.
 - El panel del coach prioriza excepciones respaldadas por fechas, series, marcas y activaciones existentes.
 - El cierre de sesión del atleta y la retirada del acceso heredado mediante PIN están incompletos.
 - CI, la cobertura E2E, las operaciones de lanzamiento y los procedimientos de recuperación están incompletos.
+- El ciclo de vida generalizado de sesiones, las restricciones numéricas/FK restantes, backup/restauración y la preparación del piloto siguen incompletos.
 
 Decisiones abiertas:
 

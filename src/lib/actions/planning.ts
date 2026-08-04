@@ -7,10 +7,8 @@ import {
   days,
   exercises,
   plannedSets,
-  dayCompletions,
   setLogs,
   executionSets,
-  dayExecutions,
   records,
 } from "@/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -25,6 +23,11 @@ import {
   liftForExercise,
   resolvePrescriptionKg,
 } from "@/lib/execution";
+import {
+  assertValidDayCompletionMutationId,
+  completeDay,
+  type DayCompletionResult,
+} from "@/lib/day-completion";
 
 export async function crearPrograma(
   athleteId: string,
@@ -339,51 +342,19 @@ export async function registrarSet(
   return { status, outcome: "applied" as const };
 }
 
-export async function completarDia(dayId: string) {
+export async function completarDia(
+  dayId: string,
+  clientMutationId: string
+): Promise<DayCompletionResult> {
+  assertValidDayCompletionMutationId(clientMutationId);
   const owner = await requireAthleteResource("day", dayId);
-  const sourceSets = await db
-    .select({ id: plannedSets.id })
-    .from(plannedSets)
-    .innerJoin(exercises, eq(plannedSets.exerciseId, exercises.id))
-    .where(eq(exercises.dayId, dayId));
-  const evidence = await db
-    .select({ id: executionSets.id })
-    .from(executionSets)
-    .where(eq(executionSets.sourceDayId, dayId));
-  if (sourceSets.length === 0 || evidence.length !== sourceSets.length) {
-    throw new Error("Registrá u omití cada serie antes de cerrar la sesión.");
-  }
-
-  const source = await db
-    .select({
-      programId: programs.id,
-      programName: programs.nombre,
-      weekNumber: weeks.numero,
-      dayName: days.nombre,
-    })
-    .from(days)
-    .innerJoin(weeks, eq(days.weekId, weeks.id))
-    .innerJoin(programs, eq(weeks.programId, programs.id))
-    .where(eq(days.id, dayId))
-    .limit(1);
-  if (!source[0]) throw new Error("Sesión inexistente.");
-
-  await db
-    .insert(dayExecutions)
-    .values({
-      athleteId: owner.athleteId,
-      sourceProgramId: source[0].programId,
-      sourceDayId: dayId,
-      programName: source[0].programName,
-      weekNumber: source[0].weekNumber,
-      dayName: source[0].dayName,
-    })
-    .onConflictDoNothing({ target: dayExecutions.sourceDayId });
-  const legacyCompletion = await db.query.dayCompletions.findFirst({
-    where: eq(dayCompletions.dayId, dayId),
+  const result = await completeDay(db, {
+    athleteId: owner.athleteId,
+    dayId,
+    clientMutationId,
   });
-  if (!legacyCompletion) await db.insert(dayCompletions).values({ dayId });
-  revalidatePath("/hoy");
+  if (result.outcome !== "conflict") revalidatePath("/hoy");
+  return result;
 }
 
 export async function duplicarDia(dayId: string, athleteId: string) {

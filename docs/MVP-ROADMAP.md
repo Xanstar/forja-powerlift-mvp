@@ -78,7 +78,7 @@ Al finalizar este recorte, un coach debe poder asignar un programa a un atleta; 
 - [ ] Incorporar `workout_sessions` y `set_performances` como registros inmutables de ejecución.
 - [ ] Capturar nombre del ejercicio, prescripción, carga resuelta y referencias de plan/versión al ejecutar.
 - [ ] Agregar estados explícitos del programa y transiciones protegidas.
-- [ ] Hacer transaccionales las operaciones de inicio, guardado y finalización cuando corresponda, y seguras ante reintentos.
+- [ ] Hacer transaccionales las operaciones de inicio, guardado y finalización cuando corresponda, y seguras ante reintentos. El cierre del día ya es atómico e idempotente; el ciclo general de sesión sigue pendiente.
 - [ ] Agregar restricciones de unicidad, claves foráneas, enum/check y valores obligatorios para el nuevo recorrido.
 - [ ] Definir una semántica canónica de programado, pendiente y completado para atleta y coach.
 - [ ] Crear una bandeja del coach con: vencido o ausente, completado con desviación y atención de activación/sincronización.
@@ -259,9 +259,9 @@ Estas rutas son objetivos de planificación, no permiso para mezclar refactors n
 ### Integridad de datos
 
 - [ ] Claves foráneas habilitadas y probadas contra el comportamiento real de libSQL.
-- [ ] Restricciones únicas preservan invariantes de sesión e idempotencia.
+- [x] Restricciones únicas preservan la finalización por día y evitan reutilizar operaciones entre series y días.
 - [ ] Límites numéricos rechazan repeticiones, cargas, RPE y porcentajes imposibles.
-- [ ] Escrituras de finalización atómicas y seguras ante reintentos.
+- [x] Escrituras de finalización del día atómicas y seguras ante reintentos.
 - [ ] El historial sobrevive a edición, archivo y eliminación permitida del plan.
 - [ ] Migración aditiva ensayada con datos representativos y ruta documentada de rollback/restauración.
 
@@ -350,8 +350,8 @@ El desarrollador receptor debe usar este documento como índice de ejecución y 
 
 1. Fijar escenario, reglas de desviación, fuente/redondeo `%RM` y transiciones del programa.
 2. Agregar esquema aditivo de `workout_sessions` y `set_performances`, restricciones y fixtures representativos.
-3. Implementar inicio, guardado y finalización en servidor con autorización, transacciones e idempotencia.
-4. Adaptar entrenamiento y cola offline a IDs estables; demostrar duplicados y fallos parciales.
+3. Completar inicio y guardado del ciclo general de sesión; la finalización del día ya tiene autorización, transacción e idempotencia.
+4. Extender la estrategia offline sólo donde el piloto lo requiera; el cierre deriva un ID estable del día, sin `localStorage` ni cola detrás de series offline.
 5. Resolver y guardar prescripciones `%RM` en el límite de ejecución.
 6. Migrar historial y progreso a instantáneas; demostrar que editar planes no reescribe historial.
 7. Centralizar calendario/pendientes y construir la proyección de bandeja.
