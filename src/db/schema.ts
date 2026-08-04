@@ -1,4 +1,6 @@
 import {
+  index,
+  primaryKey,
   sqliteTable,
   text,
   integer,
@@ -62,7 +64,8 @@ export const athletes = sqliteTable("athletes", {
   telefonoE164: text("telefono_e164").unique(),
   telefonoVerificadoAt: integer("telefono_verificado_at", { mode: "timestamp" }),
   invitacionEnviadaAt: integer("invitacion_enviada_at", { mode: "timestamp" }),
-  accessPin: text("access_pin").notNull(), // PIN de 4-6 dígitos para que el atleta entre desde su celular sin cuenta propia
+  accessPin: text("access_pin").notNull(), // Columna heredada; sólo contiene PIN si el flag legado está habilitado.
+  credentialVersion: integer("credential_version").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -85,6 +88,39 @@ export const athleteActivationChallenges = sqliteTable(
       .notNull()
       .default(sql`(unixepoch())`),
   }
+);
+
+export const athleteAccessTokens = sqliteTable(
+  "athlete_access_tokens",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    athleteId: text("athlete_id")
+      .notNull()
+      .unique()
+      .references(() => athletes.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    credentialVersion: integer("credential_version").notNull(),
+    issuedAt: integer("issued_at", { mode: "timestamp" }).notNull(),
+    rotatedAt: integer("rotated_at", { mode: "timestamp" }),
+    revokedAt: integer("revoked_at", { mode: "timestamp" }),
+  },
+  (table) => [index("athlete_access_tokens_active_idx").on(table.revokedAt)]
+);
+
+export const accessRateLimits = sqliteTable(
+  "access_rate_limits",
+  {
+    scope: text("scope").notNull(),
+    keyHash: text("key_hash").notNull(),
+    windowStartMs: integer("window_start_ms").notNull(),
+    attemptCount: integer("attempt_count").notNull(),
+    lockedUntilMs: integer("locked_until_ms"),
+    updatedAtMs: integer("updated_at_ms").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.scope, table.keyHash] }),
+    index("access_rate_limits_updated_idx").on(table.updatedAtMs),
+  ]
 );
 
 // Récords de fuerza (1RM real o estimado) por levantamiento.
@@ -260,6 +296,7 @@ export const athletesRelations = relations(athletes, ({ one, many }) => ({
   programs: many(programs),
   records: many(records),
   activationChallenge: one(athleteActivationChallenges),
+  accessToken: one(athleteAccessTokens),
 }));
 
 export const athleteActivationChallengesRelations = relations(
@@ -267,6 +304,16 @@ export const athleteActivationChallengesRelations = relations(
   ({ one }) => ({
     athlete: one(athletes, {
       fields: [athleteActivationChallenges.athleteId],
+      references: [athletes.id],
+    }),
+  })
+);
+
+export const athleteAccessTokensRelations = relations(
+  athleteAccessTokens,
+  ({ one }) => ({
+    athlete: one(athletes, {
+      fields: [athleteAccessTokens.athleteId],
       references: [athletes.id],
     }),
   })
