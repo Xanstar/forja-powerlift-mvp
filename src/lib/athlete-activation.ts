@@ -1,4 +1,9 @@
-import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
+import {
+  createHmac,
+  randomInt,
+  timingSafeEqual,
+} from "node:crypto";
+import { createDisabledAthleteAccessPin } from "@/lib/athlete-access-token";
 
 export const ACTIVATION_CODE_TTL_MS = 10 * 60 * 1000;
 export const ACTIVATION_RESEND_COOLDOWN_MS = 60 * 1000;
@@ -44,5 +49,18 @@ export function canSendActivation(sentAt: Date | null, now = new Date()) {
 }
 
 export function legacyPinAccessEnabled(value = process.env.ATHLETE_LEGACY_PIN_ENABLED) {
-  return value?.trim().toLowerCase() !== "false";
+  return value?.trim().toLowerCase() === "true";
+}
+
+export function createAthleteAccessPinValue(
+  usedPins: Set<string> = new Set(),
+  legacyEnabled = legacyPinAccessEnabled()
+) {
+  if (!legacyEnabled) return createDisabledAthleteAccessPin();
+  let pin: string;
+  do {
+    pin = randomInt(100_000, 1_000_000).toString();
+  } while (usedPins.has(pin));
+  usedPins.add(pin);
+  return pin;
 }

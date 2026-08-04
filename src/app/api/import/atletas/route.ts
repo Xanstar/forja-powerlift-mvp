@@ -5,17 +5,9 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { parseAtletasExcel } from "@/lib/excel";
 import { LIFTS } from "@/lib/queries";
+import { createAthleteAccessPinValue } from "@/lib/athlete-activation";
 
 const MAX_BYTES = 4_000_000;
-
-function generarPin(pinsUsados: Set<string>): string {
-  let pin: string;
-  do {
-    pin = Math.floor(1000 + Math.random() * 9000).toString();
-  } while (pinsUsados.has(pin));
-  pinsUsados.add(pin);
-  return pin;
-}
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -96,7 +88,7 @@ export async function POST(request: Request) {
         pesoCorporal: f.pesoCorporal ?? null,
         altura: f.altura ?? null,
         notas: f.notas ?? null,
-        accessPin: generarPin(pinsUsados),
+        accessPin: createAthleteAccessPinValue(pinsUsados),
       })
       .returning();
 

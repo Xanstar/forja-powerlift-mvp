@@ -74,7 +74,6 @@ export async function GET() {
       pesoCorporal: a.pesoCorporal != null ? `${a.pesoCorporal}` : "",
       altura: a.altura != null ? `${a.altura}` : "",
       estado: a.estado === "activo" ? "Activo" : "Inactivo",
-      pin: a.accessPin,
       sentadilla: fmtLift("sentadilla"),
       banca: fmtLift("banca"),
       pesoMuerto: fmtLift("peso_muerto"),

@@ -20,10 +20,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev --hostname 127.0.0.1 --port 3100",
+    command:
+      "pnpm exec tsx src/db/migrate.ts && pnpm dev --hostname 127.0.0.1 --port 3100",
     url: baseURL,
     env: {
       AUTH_SECRET: "playwright-e2e-only-secret-not-for-production",
+      DATABASE_URL: "file:/tmp/opencode/forja-e2e.db",
+      ATHLETE_LEGACY_PIN_ENABLED: "false",
     },
     reuseExistingServer: false,
     timeout: 120_000,

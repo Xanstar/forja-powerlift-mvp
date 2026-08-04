@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import {
   activateAthlete,
@@ -39,12 +40,28 @@ export function AthleteActivationForm() {
           required
         />
       </div>
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" disabled={pending || state.status === "success"}>
         {pending ? "Verificando..." : "Activar acceso"}
       </Button>
       <p aria-live="polite" className="min-h-5 text-sm text-accent-ink">
         {state.message}
       </p>
+      {state.accessToken && (
+        <div className="border border-success bg-success-soft p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-success">
+            Credencial de acceso (se muestra una sola vez)
+          </p>
+          <code className="mt-2 block break-all text-sm text-chalk">
+            {state.accessToken}
+          </code>
+          <Link
+            href="/hoy"
+            className="mt-3 inline-flex min-h-11 items-center font-semibold text-steel"
+          >
+            Continuar al entrenamiento
+          </Link>
+        </div>
+      )}
     </form>
   );
 }
