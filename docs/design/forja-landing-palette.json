@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "name": "Forja landing palette",
+  "validatedOn": "2026-08-04",
+  "sources": {
+    "generation": {
+      "tool": "UI Colors",
+      "navy": "https://uicolors.app/generate/10294b",
+      "decisionRed": "https://uicolors.app/generate/d93636"
+    },
+    "contrastValidation": {
+      "project": "Cool Contrast",
+      "repository": "https://github.com/AlexGarrixen/Cool-Contrast",
+      "application": "https://coolcontrast.vercel.app",
+      "contentType": "Landing Page",
+      "standard": "WCAG 2.x relative luminance"
+    }
+  },
+  "scales": {
+    "navy": {
+      "50": "#EEF9FF",
+      "100": "#D9F1FF",
+      "200": "#BBE6FF",
+      "300": "#8CD9FF",
+      "400": "#55C2FF",
+      "500": "#2EA6FF",
+      "600": "#178AF9",
+      "700": "#1071E5",
+      "800": "#145BB9",
+      "900": "#174E91",
+      "950": "#10294B"
+    },
+    "decisionRed": {
+      "50": "#FEF2F2",
+      "100": "#FDE3E3",
+      "200": "#FDCBCB",
+      "300": "#FAA7A7",
+      "400": "#F47575",
+      "500": "#EA4949",
+      "600": "#D93636",
+      "700": "#B52020",
+      "800": "#951F1F",
+      "900": "#7C2020",
+      "950": "#430C0C"
+    }
+  },
+  "semantic": {
+    "canvas": "#F4F1EA",
+    "primaryInk": "#10294B",
+    "secondaryInk": "#526075",
+    "heroGradient": {
+      "from": "#10294B",
+      "to": "#174E91",
+      "foreground": "#F4F1EA"
+    },
+    "primaryAction": {
+      "default": "#B52020",
+      "hover": "#951F1F",
+      "foreground": "#FFFFFF"
+    },
+    "decisionSignal": "#D93636"
+  },
+  "contrastChecks": [
+    { "foreground": "#10294B", "background": "#F4F1EA", "ratio": 12.92, "normalText": "AAA" },
+    { "foreground": "#F4F1EA", "background": "#174E91", "ratio": 7.34, "normalText": "AAA" },
+    { "foreground": "#FFFFFF", "background": "#D93636", "ratio": 4.63, "normalText": "AA" },
+    { "foreground": "#FFFFFF", "background": "#B52020", "ratio": 6.58, "normalText": "AA" },
+    { "foreground": "#FFFFFF", "background": "#951F1F", "ratio": 8.42, "normalText": "AAA" },
+    { "foreground": "#526075", "background": "#F4F1EA", "ratio": 5.66, "normalText": "AA" }
+  ],
+  "wcagThresholds": {
+    "normalText": { "AA": 4.5, "AAA": 7 },
+    "largeText": { "AA": 3, "AAA": 4.5 }
+  }
+}

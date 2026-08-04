@@ -98,6 +98,21 @@ Usar la composición completa para la marca visible del producto y mantener el n
 
 La paleta canónica combina Blanco Hueso, Azul Forja, Rojo Impulso y Gris Niebla. Los tonos auxiliares sólo derivan estados interactivos o semánticos.
 
+### Paleta validada para la landing
+
+Las escalas completas y su procedencia se exportan en `docs/design/forja-landing-palette.json`. Fueron generadas con [UI Colors para Azul Forja](https://uicolors.app/generate/10294b) y [UI Colors para Rojo Impulso](https://uicolors.app/generate/d93636), y validadas el 2026-08-04 con [Cool Contrast](https://coolcontrast.vercel.app), proyecto [MIT disponible en GitHub](https://github.com/AlexGarrixen/Cool-Contrast), usando el tipo de contenido `Landing Page`.
+
+| Uso semántico | Fondo | Primer plano | Contraste | Criterio para texto normal |
+|---|---:|---:|---:|---|
+| Tinta principal sobre hueso | `#F4F1EA` | `#10294B` | 12.92:1 | AAA |
+| Extremo claro del gradiente hero | `#174E91` | `#F4F1EA` | 7.34:1 | AAA |
+| Acción primaria | `#B52020` | `#FFFFFF` | 6.58:1 | AA |
+| Acción primaria en hover/active | `#951F1F` | `#FFFFFF` | 8.42:1 | AAA |
+| Señal Rojo Impulso | `#D93636` | `#FFFFFF` | 4.63:1 | AA; no usar como CTA preferente |
+| Texto secundario sobre hueso | `#F4F1EA` | `#526075` | 5.66:1 | AA |
+
+El gradiente público se limita a una superficie hero significativa, de `#10294B` a `#174E91`, siempre con texto Blanco Hueso. `#526075` sólo se usa sobre hueso o papel; las superficies navy usan tokens inversos. Los umbrales aplicados son 4.5:1 para AA y 7:1 para AAA en texto normal.
+
 ### Primary
 
 - **Rojo Impulso:** acciones primarias, desvíos que requieren revisión y señales de alta prioridad.

@@ -7,7 +7,7 @@ Forja should move from a pilot-capable product to a safer, recoverable productio
 This work has **two independent delivery lanes**:
 
 - **Lane A: Production and product hardening** proves persistence, reduces security and operational risk, and strengthens coach workflows.
-- **Lane B: Public landing replacement** reduces content and turns one persistent training record into an interactive five-stage scroll story.
+- **Lane B: Public landing replacement** presents the real coaching loop through editorial photography, product evidence, and a semantic five-stage narrative.
 
 > **Release boundary:** the two lanes must not ship as one mixed release. Database, dependency, mutation, and operational-control changes carry a different risk profile from a motion-heavy public redesign. Each lane requires its own change set, verification evidence, release decision, and rollback path.
 
@@ -16,9 +16,9 @@ This work has **two independent delivery lanes**:
 | Area | Verified state | Implication |
 |---|---|---|
 | Production landing | Reachable in production | The replacement must preserve availability, truthful content, and the access path. |
-| Landing behavior | Microanimations exist, but they do not narrate a record transforming through the coaching cycle | The next landing should use one orchestrated product story rather than adding more isolated motion. |
-| Mobile length | Approximately 8,230 px | The page is too long for the amount of distinct information it communicates. |
-| Design detector | Zero issues found | The redesign is not a mechanical cleanup; it is a content, persuasion, and interaction change. |
+| Landing behavior | Corrective redesign implemented locally with a static semantic narrative | The landing now prioritizes image fidelity, product evidence, and native reading order over decorative motion. |
+| Mobile composition | Natural single-column flow with full-width 16:9 imagery | Page height is no longer an optimization target when it would damage hierarchy or image quality. |
+| Visual evidence | Original 1672 × 941 PNG masters are served through `next/image` | Rendered frames and responsive requests must preserve the source ratio and avoid visible upscaling. |
 | Build and tests | Production build passes; 28 tests pass | Existing behavior has a useful regression baseline. |
 | TypeScript | Standalone TypeScript has one pre-existing test typing failure | Resolve or explicitly isolate this failure before making type-checking a hard release gate. |
 | Dependencies | Audit reports 5 high and 1 moderate advisories | Security remediation is an immediate production priority, especially the authenticated `xlsx`/upload path. |
@@ -38,12 +38,9 @@ Effort bands are relative engineering estimates: **S** is a focused change, **M*
 | 4 | A4. Make coach mutations failure-safe | A | L | A3 release controls | No destructive partial state; recovery is actionable |
 | 5 | A5. Prioritize the coach decision queue deterministically | A | M | Stable mutation/data contracts from A4 | Same inputs always produce the same actionable order |
 | 6 | A6. Reduce program-authoring friction safely | A | L | Published-version protections from A4 | Faster draft work without mutating published history |
-| 7 | Stage UX 0. Composition, spacing, and responsive separation | B | M | Current landing defect baseline | Passed: no intersections or horizontal overflow |
-| 8 | Stage UX 1. Grid, optical balance, and narrative choreography | B | L | UX 0 accepted; completed symmetry/balance audit | Authored desktop, tablet, and mobile composition passes |
-| 9 | B1. Freeze reduced architecture and storyboard | B | S | UX 1 accepted; approved five-stage direction | Content map and state choreography approved |
-| 10 | B2. Build the semantic landing foundation | B | M | B1 | Complete SSR/no-JS story and working access form |
-| 11 | B3. Implement the interactive transformation | B | L | B2 | Five stages transform one persistent record without scroll-jacking |
-| 12 | B4. Harden accessibility, performance, and release | B | M | B3 | Accessibility, mobile, Core Web Vitals, and rollback gates pass |
+| 7 | Corrective visual composition | B | M | Original image masters and product truth | Implemented locally; final verification pending |
+| 8 | Product evidence and five-stage narrative | B | M | Corrective composition | Implemented locally; final verification pending |
+| 9 | Accessibility, responsive, and performance hardening | B | M | Corrective implementation | Automated and bounded visual verification pending |
 
 Lane B discovery and storyboard work may proceed while Lane A is being implemented, but Lane B must remain a separate branch/change set and release. The recommended production order is to release and observe Lane A before releasing Lane B.
 
@@ -320,7 +317,7 @@ Lane B discovery and storyboard work may proceed while Lane A is being implement
 
 **Outcome:** turn the collision-free landing into an intentionally authored composition across desktop, tablet, and mobile while preserving every Stage UX 0 geometry guarantee.
 
-**Status and priority:** Stage UX 0 passed with no current intersections or horizontal overflow. The completed deep symmetry/balance audit rates the overall composition at approximately **6.5/10**: it is product-specific, but only partially authored. **Stage UX 1 is NEXT after this production release.** Animation implementation and copy polish remain deferred until this stage passes.
+**Status and priority:** **Passed locally on 2026-08-03.** Stage UX 1 now uses one shared 12-column alignment system, an authored tablet composition, and distinct execution-, comparison-, and decision-led story treatments while retaining the Stage UX 0 collision and overflow guarantees. Animation implementation and copy polish remain deferred to their later stages.
 
 **Verified audit findings**
 
@@ -373,9 +370,13 @@ Lane B discovery and storyboard work may proceed while Lane A is being implement
 - Compare 1180 px and 1179 px measurements directly; treat any abrupt structural or page-height discontinuity as a failed P1 gate.
 - Verify the complete page with reduced motion enabled and confirm information order, geometry, and access remain equivalent without animation.
 
+**Local implementation evidence (2026-08-03):** focused landing E2E passed at 1440, 1024, 768, 390, and 360 px and directly locked the 1180/1179 pair. Total page heights measured **6,907 px at 1180**, **6,823 px at 1179** (84 px / 1.2% difference), and **6,383 px at 1024**, materially below the 8,200 px target. Automated geometry checks found no copy/image/board/caption/evidence intersections or horizontal overflow, confirmed 14 px caption proximity and 24–32 px evidence proximity, and verified deterministic two-row evidence at 360 px. Build, full landing E2E, access tests, standalone TypeScript, reduced motion, visual QA, and final diff outcomes are recorded in the work-unit handoff rather than promoted here as deployment evidence.
+
 > **Stage gate:** Stage UX 1 follows the current production release and precedes animation work. Do not begin animation implementation or copy polish until this grid, tablet, optical-balance, and narrative-composition contract passes at every verification viewport.
 
 ### Selected direction
+
+**Corrective update (2026-08-04):** the previous motion-first, no-photography direction was rejected. The active direction uses the original approved 16:9 athlete images as primary editorial evidence, keeps product UI comparisons explicit, and favors excellent static composition over non-essential animation.
 
 Replace the static hero and five text-heavy scenes with a user-selected interactive scroll story. The story must transform **one persistent record** through this exact choreography:
 
@@ -392,7 +393,7 @@ The record is the protagonist. Its identity and relevant context persist while s
 - Use realistic product UI as the primary evidence, clearly labeling synthetic demonstration data where a visitor could mistake it for real customer data.
 - Build composition and motion from bar and platform geometry, plates, force lines, competition signals, regulatory numbers, result states, and version markers.
 - Make the experience athletic and purchase-worthy through precision, tension, cadence, and consequence.
-- Use no photography.
+- Use the original 1672 × 941 athlete photography in reviewed 16:9 frames without portrait coercion, tiny strips, or visible upscaling.
 - Avoid generic bodybuilding red/black clichés, glow-heavy gym aesthetics, fake testimonials, invented customers, and unsupported performance or commercial metrics.
 - Preserve the established competition-room product truth: evidence, numbers, state, and decisions outrank generic marketing illustration.
 
@@ -560,7 +561,7 @@ Reduce landing content by approximately **25–35%** while preserving the comple
 - Test at 200% zoom and representative mobile viewport sizes/orientations.
 - Run automated accessibility checks, then manual checks for reading order, state announcements, and motion.
 - Measure lab performance on throttled mobile and desktop profiles and observe field Core Web Vitals after release when traffic permits.
-- Run the design detector once after implementation, plus production build and the full test suite.
+- Run a final structured visual and accessibility QA pass after implementation, plus the production build and full test suite.
 
 **Main risks**
 
@@ -606,13 +607,13 @@ Reduce landing content by approximately **25–35%** while preserving the comple
 - [ ] Landing content is reduced by approximately 25–35% against the recorded baseline.
 - [ ] Current sections follow the approved replace/compress/preserve map.
 - [ ] The exact five-stage choreography transforms one persistent record.
-- [ ] Realistic product UI and competition geometry carry the story without photography.
+- [x] Product evidence and original athlete photography carry the story without unsupported claims.
 - [ ] Synthetic data is labeled; no testimonials, customers, metrics, or outcomes are invented.
 - [ ] SSR/no-JS content communicates the full proposition and truthful partial-offline limitation.
 - [ ] The existing access form, validation, persistence contract, success/error states, and privacy note are preserved.
 - [ ] There is no scroll-jacking; keyboard, screen reader, reduced motion, 200% zoom, and mobile behavior pass manual verification.
-- [ ] Non-critical assets and motion code are lazy-loaded and Core Web Vitals meet release thresholds.
-- [ ] Build, tests, TypeScript policy, accessibility checks, design detector, and production smoke checks pass.
+- [ ] Only the dominant hero image is preloaded; below-fold photographs are lazy-loaded. Core Web Vitals remain a release check.
+- [ ] Build, tests, TypeScript policy, accessibility checks, visual QA, and production smoke checks pass.
 - [ ] Lane B is releasable and reversible without bundling Lane A database, dependency, or coach-workflow changes.
 
 ## Cross-lane risks and controls
@@ -628,6 +629,6 @@ Reduce landing content by approximately **25–35%** while preserving the comple
 
 ## Next concrete work unit
 
-**Complete Stage UX 1 after the current production release, before animation implementation or copy polish.**
+**Verify the corrective landing as an independent release candidate.**
 
-The output of that work unit must be an accepted 12-column alignment and gutter system, an authored 768–1179 tablet composition, distinct execution-led/comparison-led/coach-decision-led treatments for stages 2–4, deterministic narrow-mobile evidence, and verification evidence at 1440, 1280, 1180/1179, 1024, 768, 390, 360, and reduced motion. B1 storyboard work follows only after this contract passes without regressing UX 0.
+The remaining work is bounded verification: inspect desktop and narrow mobile crops using the original masters, run the landing E2E and focused unit tests, confirm TypeScript/build status, and record any pre-existing unrelated failure without weakening the landing contract.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import {
   submitAccessRequest,
   type AccessRequestState,
@@ -10,6 +10,19 @@ const initialState: AccessRequestState = { status: "idle", message: "" };
 
 export function AccessRequestForm() {
   const [state, action, pending] = useActionState(submitAccessRequest, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state.status !== "error" || !state.fieldErrors) return;
+
+    const frame = requestAnimationFrame(() => {
+      formRef.current
+        ?.querySelector<HTMLElement>('input[aria-invalid="true"]')
+        ?.focus();
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [state]);
 
   if (state.status === "success") {
     return (
@@ -25,7 +38,7 @@ export function AccessRequestForm() {
     state.fieldErrors?.[field] ? `${field}-error` : undefined;
 
   return (
-    <form action={action} className="access-form" noValidate>
+    <form ref={formRef} action={action} className="access-form" noValidate>
       <div className="access-form-grid">
         <div className="access-field">
           <label htmlFor="name">Nombre y apellido</label>
@@ -72,10 +85,32 @@ export function AccessRequestForm() {
             <p id="organization-error">{state.fieldErrors.organization}</p>
           )}
         </div>
-        <fieldset className="access-field access-profile">
+        <fieldset
+          className="access-field access-profile"
+          aria-describedby={errorId("profile")}
+          aria-invalid={Boolean(state.fieldErrors?.profile)}
+        >
           <legend>Quiero usar Forja como</legend>
-          <label><input type="radio" name="profile" value="coach" required /> Coach</label>
-          <label><input type="radio" name="profile" value="gym" required /> Gimnasio</label>
+          <label>
+            <input
+              type="radio"
+              name="profile"
+              value="coach"
+              aria-describedby={errorId("profile")}
+              aria-invalid={Boolean(state.fieldErrors?.profile)}
+              required
+            /> Coach
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="profile"
+              value="gym"
+              aria-describedby={errorId("profile")}
+              aria-invalid={Boolean(state.fieldErrors?.profile)}
+              required
+            /> Gimnasio
+          </label>
           {state.fieldErrors?.profile && <p id="profile-error">{state.fieldErrors.profile}</p>}
         </fieldset>
       </div>

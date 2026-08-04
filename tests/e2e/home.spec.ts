@@ -1,137 +1,217 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const targetViewports = [
-  { name: "desktop", width: 1440, height: 1000 },
-  { name: "tablet-landscape", width: 1024, height: 768 },
-  { name: "tablet-portrait", width: 768, height: 1024 },
-  { name: "mobile", width: 390, height: 844 },
-  { name: "mobile-narrow", width: 360, height: 800 },
+  { width: 1440, height: 1000 },
+  { width: 1024, height: 768 },
+  { width: 768, height: 1024 },
+  { width: 390, height: 844 },
+  { width: 320, height: 568 },
 ] as const;
 
-async function waitForLandingImages(page: import("@playwright/test").Page) {
-  const images = await page.locator('img[alt^="Conceptual"]:visible').all();
+async function waitForLandingImages(page: Page) {
+  const images = await page.locator("main figure img").all();
 
   for (const image of images) {
     await image.scrollIntoViewIfNeeded();
     await expect.poll(() => image.evaluate((element) => {
       const htmlImage = element as HTMLImageElement;
-      const rect = htmlImage.getBoundingClientRect();
-
-      return htmlImage.complete
-        && htmlImage.naturalWidth > 0
-        && htmlImage.naturalHeight > 0
-        && rect.width > 0
-        && rect.height > 0;
+      return htmlImage.complete && htmlImage.naturalWidth > 0 && htmlImage.naturalHeight > 0;
     })).toBe(true);
   }
 }
 
-async function landingIntersections(page: import("@playwright/test").Page) {
-  return page.locator(".landing-shell").evaluate((root) => {
-    const groups = [
-      [root.querySelector(".landing-hero-copy"), root.querySelector(".hero-athlete-pair"), root.querySelector(".mechanism-board")],
-      ...Array.from(root.querySelectorAll(".story-scene")).map((scene) => [
-        scene.querySelector(".scene-copy"),
-        scene.querySelector(".story-photo-pair"),
-        scene.querySelector(".scene-product-overlay"),
-        scene.querySelector("figcaption"),
-        scene.querySelector(".scene-evidence"),
+async function hasVisualCollision(page: Page) {
+  return page.locator("main").evaluate((root) => {
+    const pairs = [
+      [root.querySelector(".landing-hero-copy"), root.querySelector(".hero-figure")],
+      [root.querySelector(".evidence-photo"), root.querySelector(".evidence-board")],
+      [root.querySelector(".roles-copy"), root.querySelector(".roles-figure")],
+      ...Array.from(root.querySelectorAll(".cycle-stage")).map((stage) => [
+        stage.querySelector(".cycle-stage-copy"),
+        stage.querySelector("figure"),
       ]),
     ];
-    const collisions: string[] = [];
 
-    for (const group of groups) {
-      const visible = group.filter((element): element is Element => {
-        if (!element) return false;
-        const style = getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-        return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
-      });
-
-      for (let firstIndex = 0; firstIndex < visible.length; firstIndex += 1) {
-        for (let secondIndex = firstIndex + 1; secondIndex < visible.length; secondIndex += 1) {
-          const first = visible[firstIndex];
-          const second = visible[secondIndex];
-          const firstRect = first.getBoundingClientRect();
-          const secondRect = second.getBoundingClientRect();
-          const intersectionWidth = Math.min(firstRect.right, secondRect.right) - Math.max(firstRect.left, secondRect.left);
-          const intersectionHeight = Math.min(firstRect.bottom, secondRect.bottom) - Math.max(firstRect.top, secondRect.top);
-
-          if (intersectionWidth > 1 && intersectionHeight > 1) {
-            collisions.push(`${first.className || first.tagName} / ${second.className || second.tagName}`);
-          }
-        }
-      }
-    }
-
-    return collisions;
+    return pairs.some(([first, second]) => {
+      if (!first || !second) return false;
+      const a = first.getBoundingClientRect();
+      const b = second.getBoundingClientRect();
+      const overlapWidth = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const overlapHeight = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      return overlapWidth > 1 && overlapHeight > 1;
+    });
   });
 }
 
-test("explains the coaching cycle and exposes the access request", async ({ page }) => {
+test("presents the product in semantic narrative order", async ({ page }) => {
   await page.goto("/");
 
-  await expect(
-    page.getByRole("heading", { name: "El coaching no termina al publicar el plan." })
-  ).toBeVisible();
-  await expect(
-    page.getByText("Un registro que avanza con el entrenamiento.", { exact: true })
-  ).toBeVisible();
-  await expect(
-    page.getByText("Imágenes conceptuales · datos sintéticos", { exact: true })
-  ).toBeVisible();
-  await expect(page.locator('img[alt^="Conceptual"]')).toHaveCount(8);
+  const headings = await page.getByRole("heading").allTextContents();
+  const expectedOrder = [
+    "El plan vale cuando conduce a la próxima decisión.",
+    "El valor está en cerrar el ciclo.",
+    "El registro avanza con el entrenamiento.",
+    "Cada persona ve lo que necesita para actuar.",
+    "La conectividad parcial no se disfraza de offline total.",
+    "Llevá el ciclo completo a tu operación.",
+  ];
+  const headingIndexes = expectedOrder.map((heading) => headings.indexOf(heading));
+  expect(headingIndexes.every((index) => index >= 0)).toBe(true);
+  expect(headingIndexes).toEqual([...headingIndexes].sort((a, b) => a - b));
 
-  const requestLink = page.getByRole("link", { name: /Solicitar acceso/ });
-  await expect(requestLink).toBeVisible();
-  await requestLink.click();
-  await expect(page.getByRole("heading", { name: "Llevá el ciclo completo a tu operación." })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Solicitar acceso" })).toBeVisible();
-
-  await page.getByRole("link", { name: "Ingresar" }).first().click();
-
-  await expect(page).toHaveURL(/\/login$/);
-  await expect(
-    page.getByText("Acceso coach", { exact: true })
-  ).toBeVisible();
-  await expect(page.getByLabel("Usuario")).toBeVisible();
-  await expect(page.getByLabel("Contraseña")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Ingresar" })).toBeVisible();
+  const cycle = page.getByRole("list", { name: "Ciclo operativo de Forja" });
+  await expect(cycle.getByRole("listitem")).toHaveCount(5);
+  await expect(cycle.getByText("Programar", { exact: true })).toBeVisible();
+  await expect(cycle.getByText("Ejecutar", { exact: true })).toBeVisible();
+  await expect(cycle.getByText("Detectar", { exact: true })).toBeVisible();
+  await expect(cycle.getByText("Revisar", { exact: true })).toBeVisible();
+  await expect(cycle.getByText("Ajustar", { exact: true })).toBeVisible();
+  await expect(page.getByText("Imágenes conceptuales · datos sintéticos", { exact: true })).toBeVisible();
+  await expect(page.locator("main figure img")).toHaveCount(8);
 });
 
-test("keeps public and athlete entry usable at 390px", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test("applies the validated hero and action palette", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "El coaching no termina al publicar el plan." })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Solicitar acceso" })).toBeVisible();
-  await page.goto("/hoy");
-  await expect(page).toHaveURL(/\/hoy$/);
-  await expect(page.getByRole("heading", { name: "Ingresá tu PIN" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Activar acceso" }).first()).toBeVisible();
+
+  const colors = await page.evaluate(() => {
+    const styles = getComputedStyle(document.documentElement);
+    const hero = getComputedStyle(document.querySelector<HTMLElement>(".landing-hero")!);
+    const heroCopy = getComputedStyle(document.querySelector<HTMLElement>(".landing-lede")!);
+    const primaryAction = getComputedStyle(document.querySelector<HTMLElement>(".landing-primary-cta")!);
+    const formAction = getComputedStyle(document.querySelector<HTMLButtonElement>(".access-form-submit button")!);
+    const accessEyebrow = getComputedStyle(document.querySelector<HTMLElement>(".access-section .landing-eyebrow")!);
+
+    return {
+      brandRed: styles.getPropertyValue("--brand-red").trim(),
+      heroBackground: hero.backgroundImage,
+      heroForeground: hero.color,
+      heroCopy: heroCopy.color,
+      primaryBackground: primaryAction.backgroundColor,
+      primaryForeground: primaryAction.color,
+      formBackground: formAction.backgroundColor,
+      formForeground: formAction.color,
+      accessEyebrow: accessEyebrow.color,
+    };
+  });
+
+  expect(colors).toEqual({
+    brandRed: "#d93636",
+    heroBackground: "linear-gradient(135deg, rgb(16, 41, 75), rgb(23, 78, 145))",
+    heroForeground: "rgb(244, 241, 234)",
+    heroCopy: "rgb(244, 241, 234)",
+    primaryBackground: "rgb(181, 32, 32)",
+    primaryForeground: "rgb(255, 255, 255)",
+    formBackground: "rgb(181, 32, 32)",
+    formForeground: "rgb(255, 255, 255)",
+    accessEyebrow: "rgb(244, 241, 234)",
+  });
+
+  await page.getByRole("link", { name: /Solicitar acceso/ }).hover();
+  await expect(page.locator(".landing-primary-cta")).toHaveCSS("background-color", "rgb(149, 31, 31)");
 });
 
 for (const viewport of targetViewports) {
-  test(`keeps landing composition separated at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`keeps imagery and composition sound at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/");
-    await expect(page.locator('img[alt^="Conceptual"]')).toHaveCount(8);
     await waitForLandingImages(page);
 
-    const visibleHeroImages = await page.locator(".hero-athlete-pair img").evaluateAll(
-      (images) => images.filter((image) => getComputedStyle(image).display !== "none").length
-    );
-    const visibleStoryImages = await page.locator(".story-photo-pair").evaluateAll((pairs) =>
-      pairs.map((pair) =>
-        Array.from(pair.querySelectorAll("img")).filter((image) => getComputedStyle(image).display !== "none").length
-      )
+    const imageMetrics = await page.locator("main figure img").evaluateAll((images) =>
+      images.map((image) => {
+        const htmlImage = image as HTMLImageElement;
+        const rect = htmlImage.getBoundingClientRect();
+        return {
+          renderedRatio: rect.width / rect.height,
+          naturalWidth: htmlImage.naturalWidth,
+          renderedWidth: rect.width,
+          currentSrc: htmlImage.currentSrc,
+          requestedWidth: Number(new URL(htmlImage.currentSrc).searchParams.get("w")),
+        };
+      })
     );
 
-    expect(visibleHeroImages).toBe(viewport.width >= 1180 ? 2 : 1);
-    expect(visibleStoryImages).toEqual(viewport.width >= 1180 ? [2, 2, 2] : [1, 1, 1]);
-    await expect(page.locator(".scene-product-overlay")).toHaveCount(3);
-    expect(await landingIntersections(page)).toEqual([]);
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
-    ).toBe(true);
+    for (const image of imageMetrics) {
+      expect(image.renderedRatio).toBeGreaterThan(1.74);
+      expect(image.renderedRatio).toBeLessThan(1.81);
+      expect(image.naturalWidth).toBeGreaterThan(0);
+      expect(image.requestedWidth + 1).toBeGreaterThanOrEqual(image.renderedWidth);
+      expect(image.currentSrc).toContain("q=90");
+    }
+
+    expect(await hasVisualCollision(page)).toBe(false);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   });
 }
+
+test("stacks every mobile composition without hidden columns", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await waitForLandingImages(page);
+
+  const geometry = await page.locator(".cycle-stage").evaluateAll((stages) =>
+    stages.map((stage) => {
+      const copy = stage.querySelector(".cycle-stage-copy")!.getBoundingClientRect();
+      const figure = stage.querySelector("figure")!.getBoundingClientRect();
+      return {
+        columns: getComputedStyle(stage).gridTemplateColumns.split(" ").length,
+        leftDelta: Math.abs(copy.left - figure.left),
+        widthDelta: Math.abs(copy.width - figure.width),
+      };
+    })
+  );
+
+  for (const stage of geometry) {
+    expect(stage.columns).toBe(1);
+    expect(stage.leftDelta).toBeLessThanOrEqual(1);
+    expect(stage.widthDelta).toBeLessThanOrEqual(1);
+  }
+
+  const evidenceColumns = await page.locator(".evidence-composition").evaluate(
+    (section) => getComputedStyle(section).gridTemplateColumns.split(" ").length
+  );
+  expect(evidenceColumns).toBe(1);
+});
+
+test("keeps the complete static story with reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  await expect(page.getByRole("list", { name: "Ciclo operativo de Forja" }).getByRole("listitem"))
+    .toHaveCount(5);
+  expect(await page.locator(".cycle-stage").evaluateAll((stages) =>
+    stages.every((stage) => getComputedStyle(stage).animationName === "none")
+  )).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test("keeps public, coach, activation, and athlete route contracts", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/");
+
+  const athleteLinks = page.getByRole("link", { name: "Atleta", exact: true });
+  await expect(athleteLinks.first()).toBeVisible();
+  await expect(athleteLinks.first()).toHaveAttribute("href", "/hoy");
+  const athleteTarget = await athleteLinks.first().boundingBox();
+  expect(athleteTarget?.width).toBeGreaterThanOrEqual(44);
+  expect(athleteTarget?.height).toBeGreaterThanOrEqual(44);
+  await expect(page.getByRole("link", { name: "Activar acceso" })).toHaveAttribute("href", "/activar");
+  await expect(page.getByRole("link", { name: "Ingresar" }).first()).toHaveAttribute("href", "/login");
+
+  await page.goto("/hoy");
+  await expect(page).toHaveURL(/\/hoy$/);
+  await expect(page.getByRole("heading", { name: "Ingresá tu PIN" })).toBeVisible();
+});
+
+test("keeps the access form reachable and associates errors with focused controls", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /Solicitar acceso/ }).click();
+  await expect(page.getByRole("heading", { name: "Llevá el ciclo completo a tu operación." })).toBeVisible();
+  await page.getByRole("button", { name: "Solicitar acceso" }).click();
+
+  await expect(page.locator("#name")).toBeFocused();
+  await expect(page.locator("#name")).toHaveCSS("outline-width", "3px");
+  await expect(page.locator(".access-profile")).toHaveAttribute("aria-describedby", "profile-error");
+  await expect(page.locator(".access-profile")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByRole("radio", { name: "Coach" })).toHaveAttribute("aria-describedby", "profile-error");
+});
