@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const targetViewports = [
+  { width: 2000, height: 1000 },
+  { width: 1920, height: 1080 },
   { width: 1440, height: 1000 },
   { width: 1024, height: 768 },
   { width: 768, height: 1024 },
@@ -103,7 +105,7 @@ test("applies the validated hero and action palette", async ({ page }) => {
     primaryForeground: "rgb(255, 255, 255)",
     formBackground: "rgb(181, 32, 32)",
     formForeground: "rgb(255, 255, 255)",
-    accessEyebrow: "rgb(244, 241, 234)",
+    accessEyebrow: "rgb(181, 32, 32)",
   });
 
   await page.getByRole("link", { name: /Solicitar acceso/ }).hover();
@@ -142,6 +144,58 @@ for (const viewport of targetViewports) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   });
 }
+
+test("keeps every landing band full bleed with constrained inner content", async ({ page }) => {
+  for (const viewport of [
+    { width: 1920, height: 1080 },
+    { width: 2000, height: 1000 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+
+    const geometry = await page.locator("[data-landing-band]").evaluateAll((bands) =>
+      bands.map((band) => {
+        const bandBounds = band.getBoundingClientRect();
+        const innerBounds = band.querySelector<HTMLElement>(":scope > .landing-band-inner")!
+          .getBoundingClientRect();
+        return {
+          left: bandBounds.left,
+          right: bandBounds.right,
+          innerWidth: innerBounds.width,
+        };
+      })
+    );
+
+    expect(geometry).toHaveLength(8);
+    for (const band of geometry) {
+      expect(Math.abs(band.left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(band.right - viewport.width)).toBeLessThanOrEqual(1);
+      expect(band.innerWidth).toBeLessThanOrEqual(1536);
+    }
+  }
+});
+
+test("keeps the fixed light and dark module sequence in either global theme", async ({ page }) => {
+  await page.goto("/");
+
+  const expectedTones = ["light", "dark", "light", "dark", "light", "dark", "light", "dark"];
+  const expectedColors = expectedTones.map((tone) =>
+    tone === "light" ? "rgb(16, 41, 75)" : "rgb(244, 241, 234)"
+  );
+
+  for (const theme of ["light", "dark"]) {
+    await page.evaluate((value) => document.documentElement.dataset.theme = value, theme);
+    const bands = await page.locator("[data-landing-band]").evaluateAll((elements) =>
+      elements.map((element) => ({
+        tone: (element as HTMLElement).dataset.tone,
+        color: getComputedStyle(element).color,
+      }))
+    );
+
+    expect(bands.map((band) => band.tone)).toEqual(expectedTones);
+    expect(bands.map((band) => band.color)).toEqual(expectedColors);
+  }
+});
 
 test("stacks every mobile composition without hidden columns", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -182,7 +236,89 @@ test("keeps the complete static story with reduced motion", async ({ page }) => 
   expect(await page.locator(".cycle-stage").evaluateAll((stages) =>
     stages.every((stage) => getComputedStyle(stage).animationName === "none")
   )).toBe(true);
+  expect(await page.locator("[data-reveal]").evaluateAll((elements) =>
+    elements.every((element) => {
+      const style = getComputedStyle(element);
+      return style.opacity === "1" && style.transform === "none" && style.transitionDuration === "0s";
+    })
+  )).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test("reveals below-fold content once and never resets it", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+
+  const target = page.locator('[data-stage="revisar"]');
+  await expect(target).toHaveAttribute("data-reveal-state", "pending");
+  await target.scrollIntoViewIfNeeded();
+  await expect(target).toHaveAttribute("data-reveal-state", "revealed");
+  await expect(target).toHaveCSS("opacity", "1");
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await target.scrollIntoViewIfNeeded();
+  await expect(target).toHaveAttribute("data-reveal-state", "revealed");
+  await expect(target).toHaveCSS("transform", "none");
+});
+
+test("reveals hash targets immediately", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/#solicitar-acceso");
+
+  const target = page.locator("#solicitar-acceso [data-reveal]");
+  await expect(target).toHaveAttribute("data-reveal-state", "revealed");
+  await expect(target).toHaveCSS("opacity", "1");
+});
+
+test("reveals every module passed by an instant jump to access", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator('[data-reveal-state="pending"]')).not.toHaveCount(0);
+
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = "auto";
+  });
+  await page.getByRole("link", { name: /Solicitar acceso/ }).click();
+  await expect(page).toHaveURL(/#solicitar-acceso$/);
+
+  const intermediate = page.locator(
+    "#evidencia [data-reveal], #como-funciona [data-reveal], .roles-section [data-reveal], .trust-section [data-reveal]"
+  );
+  await expect(intermediate).toHaveCount(9);
+  await expect.poll(() => intermediate.evaluateAll((elements) =>
+    elements.every((element) => {
+      const style = getComputedStyle(element);
+      return element.getAttribute("data-reveal-state") === "revealed" && style.opacity === "1";
+    })
+  )).toBe(true);
+
+  expect(await page.locator('[data-reveal-state="pending"]').evaluateAll((elements) =>
+    elements.filter((element) => {
+      const style = getComputedStyle(element);
+      return element.getBoundingClientRect().top <= window.innerHeight * 0.92 && style.opacity === "0";
+    }).length
+  )).toBe(0);
+});
+
+test("keeps every module visible without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL as string,
+    javaScriptEnabled: false,
+  });
+  const page = await context.newPage();
+
+  try {
+    await page.goto("/");
+    await expect(page.locator("[data-landing-band]")).toHaveCount(8);
+    expect(await page.locator("[data-reveal]").evaluateAll((elements) =>
+      elements.every((element) => {
+        const style = getComputedStyle(element);
+        return style.opacity === "1" && style.transform === "none";
+      })
+    )).toBe(true);
+  } finally {
+    await context.close();
+  }
 });
 
 test("keeps public, coach, activation, and athlete route contracts", async ({ page }) => {
