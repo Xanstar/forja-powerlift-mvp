@@ -231,11 +231,23 @@ export const dayCompletions = sqliteTable("day_completions", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   dayId: text("day_id")
     .notNull()
+    .unique()
     .references(() => days.id, { onDelete: "cascade" }),
   completadoEn: integer("completado_en", { mode: "timestamp" })
-    .notNull()
     .default(sql`(unixepoch())`),
 });
+
+export const dayCompletionLegacyDuplicates = sqliteTable(
+  "day_completion_legacy_duplicates",
+  {
+    originalId: text("original_id").primaryKey(),
+    dayId: text("day_id").notNull(),
+    completadoEn: integer("completado_en", { mode: "timestamp" }),
+    canonicalId: text("canonical_id").notNull(),
+    archivedAt: integer("archived_at", { mode: "timestamp" }).notNull(),
+    reason: text("reason").notNull(),
+  }
+);
 
 // Immutable execution evidence. Source IDs are intentionally not foreign keys:
 // editing or retiring a plan must never rewrite completed training history.
@@ -275,6 +287,7 @@ export const dayExecutions = sqliteTable("day_executions", {
   athleteId: text("athlete_id").notNull(),
   sourceProgramId: text("source_program_id").notNull(),
   sourceDayId: text("source_day_id").notNull().unique(),
+  clientMutationId: text("client_mutation_id").unique(),
   programName: text("program_name").notNull(),
   weekNumber: integer("week_number").notNull(),
   dayName: text("day_name").notNull(),
