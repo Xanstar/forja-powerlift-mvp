@@ -207,7 +207,7 @@ Cada elemento requiere atleta, motivo, sesión/fecha relevante, estado y una acc
 
 ### Línea de trabajo de marca
 
-Usar Impeccable para documentar el sistema actual y luego orientar superficies operativas de alto valor. Este resumen técnico utiliza una estética exclusiva de la presentación basada en evidencia actual: grafito forjado, tiza/blanco cálido, acento óxido moderado, divisores de acero y tipografía funcional.
+Documentar el sistema actual y orientar las superficies operativas de alto valor con evidencia del producto. Este resumen técnico utiliza una estética exclusiva de la presentación: grafito forjado, tiza/blanco cálido, acento óxido moderado, divisores de acero y tipografía funcional.
 
 **Esta dirección visual del deck no es la marca final de la aplicación.** Antes de un rediseño integral, realizar un taller independiente de dirección con el usuario, establecer autoridad visual y documentar el universo aprobado. No inferir aprobación a partir del deck ni de la implementación actual.
 

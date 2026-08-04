@@ -38,14 +38,6 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen font-sans antialiased">
-        {/*
-          THESIS: Forja makes coaching continuity visible as five linked competition passes, refusing the disconnected feature catalog.
-          OWN-WORLD: bone operating sheets, Forja navy boards, decision red, sharp rules, stamps and tabular evidence.
-          STORY: see the plan become execution, exception, review and a new version; then request access.
-          FIRST VIEWPORT: the offer and primary action face a synthetic plan-versus-execution board at full working scale.
-          FORM: linked operational passes, fourth grounded structure; seed key 7b344fd5.
-          FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
-        */}
         <ServiceWorkerRegister />
         {children}
       </body>

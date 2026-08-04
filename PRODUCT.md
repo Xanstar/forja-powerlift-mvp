@@ -1,7 +1,5 @@
 # Producto
 
-<!-- impeccable:product-schema 1 -->
-
 ## Plataforma
 
 web
