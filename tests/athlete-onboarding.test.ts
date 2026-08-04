@@ -4,6 +4,7 @@ import {
   ACTIVATION_RESEND_COOLDOWN_MS,
   canSendActivation,
   createActivationCode,
+  createAthleteAccessPinValue,
   hashActivationCode,
   legacyPinAccessEnabled,
   normalizePhoneE164,
@@ -78,8 +79,11 @@ test("resend cooldown and legacy access policy are explicit", () => {
     ),
     true
   );
-  assert.equal(legacyPinAccessEnabled(undefined), true);
+  assert.equal(legacyPinAccessEnabled(undefined), false);
+  assert.equal(legacyPinAccessEnabled("true"), true);
   assert.equal(legacyPinAccessEnabled("false"), false);
+  assert.match(createAthleteAccessPinValue(new Set(), false), /^disabled_[a-f0-9]{32}$/);
+  assert.match(createAthleteAccessPinValue(new Set(), true), /^\d{6}$/);
 });
 
 test("only the owning coach may operate on an athlete invitation", async () => {

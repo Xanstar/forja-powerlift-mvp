@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
 import { db } from "./index";
 import { inicioDeSemana } from "../lib/calendario";
+import { createAthleteAccessPinValue, legacyPinAccessEnabled } from "../lib/athlete-activation";
+import { issueAthleteAccessToken } from "../lib/athlete-access-token";
+import { ATHLETE_ACCESS_TOKEN_PATTERN } from "../lib/athlete-credential";
 import {
   coaches,
   athletes,
@@ -41,7 +44,7 @@ async function main() {
       sexo: "femenino",
       estado: "activo",
       notas: "Prioridad técnica en sentadilla.",
-      accessPin: "1111",
+      accessPin: createAthleteAccessPinValue(),
     })
     .returning();
 
@@ -111,7 +114,7 @@ async function main() {
     completadoEn: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
   });
 
-  // Día 2 queda pendiente, para probar la vista del atleta por PIN.
+  // Día 2 queda pendiente para probar la vista canónica del atleta.
   const [day2] = await db
     .insert(days)
     .values({ weekId: week.id, nombre: "Día 2", orden: 1 })
@@ -134,9 +137,20 @@ async function main() {
   );
 
   console.log("✓ Datos de demo cargados.\n");
-  console.log(`  Login del entrenador: ${emailAdmin} / ${passwordAdmin}`);
-  console.log(`  PIN del atleta (Martina Gomez): ${martina.accessPin}`);
-  console.log("  → Entrá a /hoy/1111 desde el celular para ver el Día 2 pendiente.");
+  console.log(`  Usuario del entrenador: ${emailAdmin}`);
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET is required to seed athlete access.");
+  const demoToken = process.env.ATHLETE_DEMO_ACCESS_TOKEN?.trim();
+  if (!demoToken || !ATHLETE_ACCESS_TOKEN_PATTERN.test(demoToken)) {
+    throw new Error(
+      "ATHLETE_DEMO_ACCESS_TOKEN must be a 32-byte base64url token. Generate it with crypto.randomBytes(32)."
+    );
+  }
+  await issueAthleteAccessToken(db, martina.id, secret, new Date(), () => demoToken);
+  console.log("  Acceso atleta: usá ATHLETE_DEMO_ACCESS_TOKEN en /hoy.");
+  if (legacyPinAccessEnabled()) {
+    console.log("  El modo PIN legado está habilitado para esta fixture.");
+  }
 }
 
 main()

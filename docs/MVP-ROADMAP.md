@@ -50,10 +50,10 @@ No optimizar un actor perjudicando a otro. Un editor más rápido que corrompe e
 | Resumen del coach | Conteos agregados y atletas recientes | `src/app/(coach)/dashboard/page.tsx` | Sustituir conteos ambiguos por una bandeja accionable |
 | Gestión de atletas | Perfiles, marcas, pruebas de fuerza e historial | `src/app/(coach)/atletas/`, `src/app/(coach)/marcas/`, `src/lib/actions/athletes.ts`, `src/lib/actions/records.ts` | Conservar flujos; leer historial desde instantáneas |
 | Planificación | Programa -> semana -> día -> ejercicio -> serie planificada | `src/db/schema.ts`, `src/lib/actions/planning.ts`, rutas de planificación | Mantener jerarquía; agregar estado de ciclo de vida y transiciones seguras |
-| Ejecución del atleta | Entrenamiento diario, registro de series y finalización | `src/app/(athlete)/hoy/[pin]/page.tsx`, `src/components/workout-view.tsx` | Conservar superficie; escribir mediante el agregado de sesión |
-| Progreso | Historial de cargas y puntuación de fuerza | `src/app/(athlete)/progreso/[pin]/page.tsx`, ruta de historial del coach | Leer rendimientos inmutables, no uniones con planes mutables |
+| Ejecución del atleta | Entrenamiento diario, registro de series y finalización | `src/app/(athlete)/hoy/page.tsx`, `src/components/workout-view.tsx` | Acceso canónico protegido por cookie versionada; escribir mediante el agregado de sesión |
+| Progreso | Historial de cargas y puntuación de fuerza | `src/app/(athlete)/progreso/page.tsx`, ruta de historial del coach | Leer rendimientos inmutables, no uniones con planes mutables |
 | Intercambio de datos | Importación/exportación de atletas y marcas con Excel | `src/app/api/import/atletas/route.ts`, `src/app/api/export/atletas/route.ts` | Conservar; agregar evidencia de validación y transacción |
-| Activación | Invitación por WhatsApp, OTP y acceso verificado | `src/lib/actions/athlete-onboarding.ts`, `src/lib/evolution-client.ts` | Conservar; definir aparte la retirada del PIN heredado |
+| Activación | Invitación por WhatsApp, OTP, token aleatorio rotable y acceso verificado | `src/lib/actions/athlete-onboarding.ts`, `src/lib/athlete-access-token.ts` | Implementado localmente; desplegar `0007` y retirar el PIN por cohorte |
 | Sin conexión | Cola parcial del cliente para registrar series | `src/lib/offline-queue.ts`, `src/components/workout-view.tsx` | Agregar claves de operación estables y estado visible de sincronización |
 | Pruebas | Cobertura unitaria de autorización, onboarding y Evolution; E2E limitado | `tests/*.test.ts`, `tests/e2e/*.spec.ts` | Agregar cobertura de dominio y recorridos críticos antes del piloto |
 
@@ -84,7 +84,7 @@ Al finalizar este recorte, un coach debe poder asignar un programa a un atleta; 
 - [ ] Crear una bandeja del coach con: vencido o ausente, completado con desviación y atención de activación/sincronización.
 - [ ] Resolver `%RM` a una carga concreta desde un registro identificado y guardar fuente y carga resuelta.
 - [ ] Preservar la finalización con conectividad intermitente y estados visibles en cola, sincronizado y fallido.
-- [ ] Proveer cierre de sesión del atleta y una política explícita y configurable para el PIN heredado.
+- [x] Proveer cierre de sesión del atleta y una política explícita y configurable para el PIN heredado.
 - [ ] Incorporar evidencia unitaria, de integración y E2E crítica, ensayo de migración, procedimiento de backup/restauración y checklist de smoke test en producción.
 
 ### Debería: solo cuando todo lo obligatorio esté en verde
@@ -233,7 +233,7 @@ Usar **9-10 días** en el mismo orden: días 1-3 modelo y escritura; 4-5 lectura
 | Esquema de ejecución | `src/db/schema.ts`, migraciones | Primero aditivo; proteger historial de cascadas |
 | Ciclo del programa | `src/lib/actions/planning.ts`, rutas/componentes | Llevar transiciones a servicios de aplicación |
 | Servicio de comandos de sesión | Módulo enfocado en `src/lib/` o `src/lib/actions/` | Posee transacción, autorización, idempotencia y desvíos |
-| Adaptador de ejecución | `src/app/(athlete)/hoy/[pin]/page.tsx`, `src/components/workout-view.tsx` | Mantener la interfaz estable al cambiar persistencia |
+| Adaptador de ejecución | `src/app/(athlete)/hoy/page.tsx`, `src/components/workout-view.tsx` | Mantener la interfaz estable al cambiar persistencia |
 | Sincronización offline | `src/lib/offline-queue.ts` | IDs estables, reintentos acotados y estado visible |
 | Resolución `%RM` | Servicio de planificación/ejecución y consultas de marcas | Guardar fuente y kilogramos resueltos |
 | Proyección de historial | Rutas de historial y progreso | Leer instantáneas; preservar datos antiguos durante transición |
@@ -248,11 +248,12 @@ Estas rutas son objetivos de planificación, no permiso para mezclar refactors n
 
 ### Seguridad
 
-- [ ] Verificación de propiedad en servidor para cada operación de coach y sesión de atleta.
-- [ ] Identidad estable de sesión; logout invalida el estado local de acceso.
-- [ ] Vencimiento, intentos, reenvíos y errores genéricos de OTP siguen cubiertos.
-- [ ] El PIN heredado tiene política explícita por entorno y plan de retirada.
-- [ ] Sin secretos, códigos, PIN ni payloads sensibles en logs.
+- [x] Verificación de propiedad en servidor para cada operación de coach y sesión de atleta.
+- [x] Identidad estable de sesión; logout invalida el estado local de acceso.
+- [x] Vencimiento, intentos, reenvíos y errores genéricos de OTP siguen cubiertos.
+- [x] El PIN heredado tiene política explícita por entorno y plan de retirada.
+- [x] Sin secretos, códigos, PIN ni payloads sensibles en logs o exportaciones.
+- [x] El limitador persistente usa cookie cliente aleatoria y fingerprints HMAC; el lockout sobrevive al rollover y el límite por credencial persiste aunque se borre la cookie.
 - [ ] Las importaciones exigen autenticación, límites de archivo/tipo/tamaño y validación por fila.
 
 ### Integridad de datos
@@ -329,7 +330,9 @@ El piloto está listo solo cuando todas estas afirmaciones son verdaderas:
 | Precedencia de marca `%RM` e incremento de redondeo | Abierta | Producto + desarrollo antes del día 2 |
 | Revisión de planes publicados | Abierta | Elegir identidad mínima o versión explícita en el día 1 |
 | Cohorte, duración y soporte del piloto | Abierta | Deben definirse antes de decidir el lanzamiento |
-| Fecha de retirada del PIN heredado | Abierta | Requiere cobertura de activación y migración |
+| Fecha de retirada del PIN heredado | Operación pendiente | El modo seguro es predeterminado; falta ejecutar `0007`, distribuir tokens y fijar la fecha final de corte |
+
+**Rollback de identidad:** `0007` es compatible como esquema aditivo, pero emitir, rotar o revocar credenciales neutraliza el PIN legado. Una reversión a código que sólo entiende PIN no recupera el login de esos atletas. Producción sigue sin migrar ni ejecutar el cutover; la recuperación requiere volver a la aplicación endurecida o un procedimiento operativo explícito de reemisión.
 
 ## Instrucciones de traspaso
 
@@ -352,6 +355,6 @@ El desarrollador receptor debe usar este documento como índice de ejecución y 
 5. Resolver y guardar prescripciones `%RM` en el límite de ejecución.
 6. Migrar historial y progreso a instantáneas; demostrar que editar planes no reescribe historial.
 7. Centralizar calendario/pendientes y construir la proyección de bandeja.
-8. Agregar confirmación de revisión, logout y política explícita de PIN heredado.
+8. ~~Agregar confirmación de revisión, logout y política explícita de PIN heredado.~~ Logout y política de PIN están implementados; la confirmación de revisión sigue pendiente.
 9. Agregar duplicación de planificación solo con toda la evidencia obligatoria en verde.
 10. Ensayar migración, backup/restauración, rollback, smoke checks y el recorrido completo; decidir lanzar o no según evidencia.

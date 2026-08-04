@@ -19,12 +19,13 @@ This work has **two independent delivery lanes**:
 | Landing behavior | Corrective redesign implemented locally with a static semantic narrative | The landing now prioritizes image fidelity, product evidence, and native reading order over decorative motion. |
 | Mobile composition | Natural single-column flow with full-width 16:9 imagery | Page height is no longer an optimization target when it would damage hierarchy or image quality. |
 | Visual evidence | Original 1672 × 941 PNG masters are served through `next/image` | Rendered frames and responsive requests must preserve the source ratio and avoid visible upscaling. |
-| Build and tests | Production build passes; 28 tests pass | Existing behavior has a useful regression baseline. |
+| Build and tests | Production build passes; 39 unit/integration tests pass; affected Playwright passes 22/22, including 3/3 athlete-access scenarios | Existing behavior has a broader regression baseline, including lockout rollover, exact thresholds, client-cookie isolation, activation rollback, legacy invalidation, and limiter concurrency. |
 | TypeScript | Standalone TypeScript has one pre-existing test typing failure | Resolve or explicitly isolate this failure before making type-checking a hard release gate. |
-| Dependencies | Audit reports 5 high and 1 moderate advisories | Security remediation is an immediate production priority, especially the authenticated `xlsx`/upload path. |
+| Dependencies | 2026-08-04 production audit reports 5 high and 2 moderate advisories | Security remediation remains an immediate production priority, especially `xlsx`, inherited `sharp`, and PostCSS paths. |
 | Database | Migration `0006` remains unverified in production | Access-request persistence must not be treated as proven until schema and write evidence are captured. |
 | Product maturity | Pilot-capable; athlete execution is strong | Preserve the athlete path and its historical execution evidence. |
 | Coach experience | Authoring, mutation failure recovery, and decision-queue prioritization are weaker | Product hardening should focus on safe coach decisions rather than broad feature expansion. |
+| Athlete access | Hardened locally with random HMAC-only tokens, versioned cookies, rotation/revocation/logout, canonical routes, and persistent rate limits | Migration `0007` and operational token cutover remain undeployed; legacy PIN is off by default and available only through an explicit flag. |
 
 ## Roadmap at a glance
 
@@ -43,6 +44,14 @@ Effort bands are relative engineering estimates: **S** is a focused change, **M*
 | 9 | Accessibility, responsive, and performance hardening | B | M | Corrective implementation | Automated and bounded visual verification pending |
 
 Lane B discovery and storyboard work may proceed while Lane A is being implemented, but Lane B must remain a separate branch/change set and release. The recommended production order is to release and observe Lane A before releasing Lane B.
+
+### Completed local security unit — athlete access hardening
+
+The application now issues 256-bit base64url athlete tokens and stores only an HMAC-SHA-256 hash. One active token row is bound to each athlete, while `athletes.credential_version` binds the HttpOnly cookie to the current credential generation. Issue, rotation, and revocation invalidate the prior legacy PIN in the same transaction and invalidate existing athlete cookies; ordinary logout only clears the current browser cookie. Successful exchange and authenticated navigation use `/hoy` and `/progreso`, with no token in a path or query. OTP consumption, phone verification, and token issue now commit atomically before the cookie is set.
+
+Persistent libSQL rate limits cover token/PIN and activation attempts by credential fingerprint and client fingerprint. The client identity is a random HttpOnly cookie; limiter rows contain only keyed HMACs. Five credential validations and ten client validations are allowed before the next attempt starts a 30-minute lockout, and active lockouts survive 15-minute window rollover. Proxy-derived addresses are combined with the cookie only when `ATHLETE_TRUST_PROXY_HEADERS=true`, which assumes the trusted edge removes and rewrites both forwarding headers. Migration `0007_athlete_access_hardening.sql` is additive and passes twice against an isolated database, but production migration and credential cutover remain pending.
+
+Schema rollback and credential rollback are different boundaries. The additive tables and column may remain when application code is reverted, but a PIN-only application cannot authenticate athletes whose issue/rotation/revocation already replaced `access_pin` with a disabled marker. Operational rollback after credential mutation requires restoring the hardened application or an explicit credential-recovery procedure; reverting code alone is insufficient.
 
 ---
 
@@ -95,7 +104,7 @@ Lane B discovery and storyboard work may proceed while Lane A is being implement
 
 **Work**
 
-- Trace each of the 5 high and 1 moderate advisories to runtime reachability and affected features.
+- Trace each of the 5 high and 2 moderate advisories to runtime reachability and affected features.
 - Replace, upgrade, patch, or isolate vulnerable dependencies; do not accept audit noise without reachability analysis.
 - For spreadsheet uploads, enforce authentication and authorization, file-size limits, accepted type/signature checks, bounded row/cell counts, parsing time limits, and safe error handling.
 - Treat workbook content as untrusted. Prevent formula injection in exported values and avoid rendering imported markup or formulas as trusted content.
@@ -578,8 +587,8 @@ Reduce landing content by approximately **25–35%** while preserving the comple
 3. Complete A3 and prove the release, observability, backup, restore, and rollback controls.
 4. Release Lane A operational controls independently and observe them.
 5. Complete A4, A5, and A6 as reviewable product work units, preserving the published/historical data contract throughout.
-6. After the current production release, complete Stage UX 1 as the next landing work unit; preserve UX 0 geometry and keep animation and copy polish deferred.
-7. After UX 1 acceptance, complete B1 planning: freeze the reduced architecture and storyboard.
+6. Stage UX 1 is complete locally; preserve its UX 0 geometry and verification contract while preparing a separate landing release.
+7. After the athlete-access release is observed, complete B1 planning: freeze the reduced architecture and storyboard.
 8. After B1 approval, implement B2 and B3 in a Lane B-only change set.
 9. Complete B4, release Lane B independently, and monitor conversion-path health, errors, and Core Web Vitals.
 
@@ -588,7 +597,7 @@ Reduce landing content by approximately **25–35%** while preserving the comple
 ### Lane A release checklist
 
 - [ ] Migration `0006` state and production persistence are proven with evidence.
-- [ ] The 5 high and 1 moderate advisories are remediated or formally risk-accepted with compensating controls and owners.
+- [ ] The 5 high and 2 moderate advisories are remediated or formally risk-accepted with compensating controls and owners.
 - [ ] The `xlsx`/upload boundary is authorized, bounded, adversarially tested, and observable.
 - [ ] CI gates build, tests, linting, and TypeScript after the pre-existing typing failure is resolved or time-bounded.
 - [ ] Security headers are deployed and compatibility-tested.
@@ -629,6 +638,6 @@ Reduce landing content by approximately **25–35%** while preserving the comple
 
 ## Next concrete work unit
 
-**Verify the corrective landing as an independent release candidate.**
+**Release athlete access hardening through a controlled additive cutover.**
 
-The remaining work is bounded verification: inspect desktop and narrow mobile crops using the original masters, run the landing E2E and focused unit tests, confirm TypeScript/build status, and record any pre-existing unrelated failure without weakening the landing contract.
+Capture a production recovery point, inspect migration state, apply `0007` only if absent, issue or rotate credentials through activation/coach workflows, and monitor generic failures plus hashed limiter rows. Keep `ATHLETE_LEGACY_PIN_ENABLED=false` by default; enable it only for a bounded migration cohort and turn it off after those athletes receive tokens. This operational unit must remain separate from the locally completed landing release candidate.

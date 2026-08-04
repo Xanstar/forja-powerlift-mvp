@@ -14,6 +14,7 @@ import { WorkoutView } from "@/components/workout-view";
 import { cn } from "@/lib/utils";
 import { ForjaLogo } from "@/components/forja-logo";
 import { ThemeControl } from "@/components/theme-control";
+import { logoutAthlete } from "@/lib/actions/athlete-access";
 
 export type DiaAtleta = {
   id: string;
@@ -63,14 +64,12 @@ export type SemanaAtleta = {
 
 export function AthleteHome({
   nombre,
-  pin,
   semanas,
   proximoDiaId,
   totalDias,
   completadosTotal,
 }: {
   nombre: string;
-  pin: string;
   semanas: SemanaAtleta[];
   proximoDiaId: string | null;
   totalDias: number;
@@ -117,19 +116,18 @@ export function AthleteHome({
         <div className="flex items-center gap-1">
           <ThemeControl />
           <Link
-            href={`/progreso/${pin}`}
+            href="/progreso"
             className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk"
           >
             <LineChart size={15} />
             Progreso
           </Link>
-          <Link
-            href="/hoy"
-            className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk"
-          >
-            <LogOut size={15} />
-            Salir
-          </Link>
+          <form action={logoutAthlete}>
+            <button type="submit" className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-chalk-muted transition-colors hover:bg-surface-hover hover:text-chalk">
+              <LogOut size={15} />
+              Salir
+            </button>
+          </form>
         </div>
       </header>
 

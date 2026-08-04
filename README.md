@@ -1,6 +1,6 @@
 # Forja
 
-MVP de planificación y seguimiento para entrenadores de powerlifting. Incluye gestión de atletas, programas y marcas, una vista móvil por PIN y soporte PWA para registrar entrenamientos con conectividad limitada.
+MVP de planificación y seguimiento para entrenadores de powerlifting. Incluye gestión de atletas, programas y marcas, acceso móvil del atleta con credencial segura y soporte PWA para registrar entrenamientos con conectividad limitada.
 
 > **Estado actual:** prototipo funcional para desarrollo y demostraciones. No está listo para datos reales ni para producción; consultá [Seguridad y despliegue](#seguridad-y-despliegue) antes de exponerlo.
 
@@ -31,7 +31,7 @@ Antes de iniciar, reemplazá `AUTH_SECRET` en `.env` por un valor aleatorio. Pod
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
 ```
 
-Abrí `http://localhost:3000`. El seed crea el entrenador definido por `ADMIN_EMAIL` y `ADMIN_PASSWORD`, además de una atleta de demostración accesible en `http://localhost:3000/hoy/1111`.
+Antes de ejecutar el seed, generá `ATHLETE_DEMO_ACCESS_TOKEN` con el mismo comando y guardalo en tu `.env`. El seed almacena sólo su HMAC y nunca imprime la credencial. Después abrí `http://localhost:3000/hoy` e ingresá ese valor para usar la atleta de demostración.
 
 > `pnpm db:seed` agrega datos y no es idempotente. Ejecutalo una sola vez sobre una base vacía.
 
@@ -52,7 +52,9 @@ Copiá `.env.example` a `.env` y ajustá solo lo necesario. Nunca confirmes `.en
 | `EVOLUTION_API_URL` | URL base del servicio persistente Evolution API | Para enviar invitaciones |
 | `EVOLUTION_API_KEY` | API key de Evolution API; sólo servidor | Para enviar invitaciones |
 | `EVOLUTION_INSTANCE_NAME` | Instancia `WHATSAPP-BAILEYS` conectada por QR | Para enviar invitaciones |
-| `ATHLETE_LEGACY_PIN_ENABLED` | Mantiene el ingreso histórico por PIN; `false` lo deshabilita | No; predeterminado `true` |
+| `ATHLETE_LEGACY_PIN_ENABLED` | Mantiene temporalmente el ingreso histórico por PIN; sólo `true` lo habilita | No; predeterminado `false` |
+| `ATHLETE_TRUST_PROXY_HEADERS` | Usa forwarding headers sólo detrás de un proxy que los sanea | No; predeterminado `false` |
+| `ATHLETE_DEMO_ACCESS_TOKEN` | Credencial aleatoria usada sólo por `db:seed`; se guarda como HMAC | Para ejecutar el seed |
 
 Los valores predeterminados del seed son solo para desarrollo. Cambiá `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `AUTH_SECRET` antes de usar un entorno compartido.
 
@@ -88,8 +90,8 @@ El repositorio no define actualmente scripts de lint ni typecheck aislado; el bu
 - Dashboard, CRUD de atletas e importación/exportación Excel.
 - Programación por programa, semana, día, ejercicio y series individuales.
 - Registro de marcas, historial y cálculos Wilks/IPF GL.
-- Vista móvil del atleta por PIN y cola offline para registrar series.
-- Alta invite-only con verificación de teléfono por WhatsApp y sesión firmada.
+- Vista móvil del atleta con credencial aleatoria, rutas canónicas sin secretos y cola offline para registrar series.
+- Alta invite-only con verificación de teléfono por WhatsApp, token rotable y sesión firmada versionada.
 - PWA con rutina cacheada y sincronización al recuperar conexión.
 
 ## Arquitectura
@@ -112,14 +114,20 @@ El modelo principal sigue la jerarquía Programa -> Semana -> Día -> Ejercicio 
 
 El entrenador registra un teléfono en formato E.164 estricto (`+`, código de país y entre 8 y 15 dígitos, sin espacios) y envía la invitación desde el detalle del atleta. Evolution API recibe `POST /message/sendText/{instance}` desde el servidor; su API key nunca llega al navegador. La instancia debe ejecutarse como servicio persistente separado de Vercel y estar conectada por QR.
 
-Los códigos son aleatorios de 6 dígitos, se almacenan sólo como HMAC ligado al desafío y teléfono, vencen a los 10 minutos, admiten 5 intentos, se consumen una vez y tienen cooldown de reenvío de 60 segundos. La verificación emite la cookie HMAC existente de 8 horas. Las respuestas públicas son genéricas para evitar enumeración.
+Los códigos son aleatorios de 6 dígitos, se almacenan sólo como HMAC ligado al desafío y teléfono, vencen a los 10 minutos, admiten 5 intentos, se consumen una vez y tienen cooldown de reenvío de 60 segundos. La verificación muestra una credencial aleatoria de 256 bits una sola vez y emite una cookie HttpOnly de 8 horas ligada a la versión persistida. Rotar o revocar invalida tokens y cookies anteriores; cerrar sesión sólo elimina la cookie actual. Las respuestas públicas son genéricas para evitar enumeración.
 
-El PIN corto continúa habilitado para no romper la demo ni producción durante la transición. Es un mecanismo más débil y reutilizable: después de activar a los atletas existentes, definí `ATHLETE_LEGACY_PIN_ENABLED=false`. Esto deshabilita nuevas sesiones por PIN; las rutas del atleta siguen exigiendo la cookie firmada.
+El PIN corto queda deshabilitado por defecto. Sólo definí `ATHLETE_LEGACY_PIN_ENABLED=true` durante una transición controlada: habilita ingreso y rutas dinámicas heredadas, pero las rutas canónicas siguen siendo `/hoy` y `/progreso`. Los atletas creados o importados con el modo legado apagado reciben un marcador no utilizable, no un PIN reusable.
+
+Los intentos de token/PIN y activación se limitan en libSQL mediante claves HMAC por credencial y por cliente. Cinco validaciones por credencial y diez por cliente están permitidas; el intento siguiente inicia un bloqueo de 30 minutos que no se reinicia al cambiar la ventana fija de 15 minutos. La identidad cliente usa una cookie aleatoria HttpOnly, SameSite=Lax y Secure en producción; sólo su HMAC llega al limitador. Borrar la cookie crea otro bucket cliente, pero no reinicia el bucket de la credencial atacada. Las filas inactivas se limpian después de 48 horas.
+
+Con `ATHLETE_TRUST_PROXY_HEADERS=false`, la cookie aleatoria evita una identidad global compartida y no se usan User-Agent ni idioma. `ATHLETE_TRUST_PROXY_HEADERS=true` combina esa cookie con IPs válidas sólo cuando el borde elimina y vuelve a escribir `x-real-ip` y `x-forwarded-for`; nunca se persisten cookie, IP ni credenciales en crudo.
+
+La migración `0007` es aditiva y el esquema puede permanecer si se revierte la aplicación. Eso NO garantiza rollback operativo del login: emitir, rotar o revocar un token neutraliza el PIN legado del atleta en la misma transacción. Después del cutover, volver a una versión que sólo entiende PIN deja a esos atletas sin acceso hasta restaurar la aplicación endurecida o ejecutar un procedimiento explícito de recuperación de credenciales. Producción todavía requiere migración, distribución de tokens y decisión de corte.
 
 Antes de usar datos reales en producción, como mínimo:
 
-- Corregí las Server Actions que todavía no validan autorización y pertenencia de recursos.
-- Deshabilitá el fallback por PIN una vez completada la transición y agregá rate limiting distribuido si desplegás múltiples instancias.
+- Conservá las validaciones de autorización y pertenencia en cada Server Action.
+- Mantené el fallback por PIN apagado salvo durante la transición y monitoreá el rate limiting persistente.
 - Reemplazá todas las credenciales de demostración y configurá secretos solo en el proveedor.
 - Revisá las vulnerabilidades conocidas de dependencias con `pnpm audit --prod`.
 - Definí una estrategia de base de datos, backups y aislamiento acorde al despliegue.

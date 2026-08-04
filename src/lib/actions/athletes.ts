@@ -1,17 +1,15 @@
 "use server";
 
-import { randomInt } from "node:crypto";
 import { db } from "@/db";
 import { athleteActivationChallenges, athletes } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { normalizePhoneE164 } from "@/lib/athlete-activation";
+import {
+  createAthleteAccessPinValue,
+  normalizePhoneE164,
+} from "@/lib/athlete-activation";
 import { requireCoachId } from "@/lib/server-authorization";
-
-function generarPin() {
-  return randomInt(1000, 10_000).toString();
-}
 
 export async function crearAtleta(formData: FormData) {
   const coachId = await requireCoachId();
@@ -40,7 +38,7 @@ export async function crearAtleta(formData: FormData) {
       sexo: sexo || null,
       notas: notas || null,
       telefonoE164,
-      accessPin: generarPin(),
+      accessPin: createAthleteAccessPinValue(),
     })
     .returning();
 

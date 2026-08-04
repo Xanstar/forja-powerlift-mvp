@@ -336,7 +336,7 @@ test("keeps public, coach, activation, and athlete route contracts", async ({ pa
 
   await page.goto("/hoy");
   await expect(page).toHaveURL(/\/hoy$/);
-  await expect(page.getByRole("heading", { name: "Ingresá tu PIN" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ingresá a tu entrenamiento" })).toBeVisible();
 });
 
 test("keeps the access form reachable and associates errors with focused controls", async ({ page }) => {

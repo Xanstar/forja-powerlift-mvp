@@ -1,11 +1,15 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { and, eq, gt, isNull, lt } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { athleteActivationChallenges, athletes } from "@/db/schema";
+import {
+  cleanupAccessRateLimits,
+  consumeAccessAttempt,
+  resetAccessAttempts,
+} from "@/lib/access-rate-limit";
 import {
   ACTIVATION_CODE_TTL_MS,
   ACTIVATION_MAX_ATTEMPTS,
@@ -15,6 +19,13 @@ import {
   normalizePhoneE164,
   verifyActivationCode,
 } from "@/lib/athlete-activation";
+import {
+  issueAthleteAccessToken,
+  revokeAthleteAccessToken,
+} from "@/lib/athlete-access-token";
+import { commitAthleteActivation } from "@/lib/athlete-activation-commit";
+import { fingerprintAccessKey } from "@/lib/athlete-credential";
+import { athleteClientFingerprint } from "@/lib/request-fingerprint";
 import {
   activationUrlFromEnv,
   createEvolutionClient,
@@ -30,7 +41,16 @@ export type InvitationState = {
   status: "idle" | "success" | "error";
   message: string;
 };
-export type ActivationState = { status: "idle" | "error"; message: string };
+export type ActivationState = {
+  status: "idle" | "success" | "error";
+  message: string;
+  accessToken?: string;
+};
+export type AthleteCredentialState = {
+  status: "idle" | "success" | "error";
+  message: string;
+  accessToken?: string;
+};
 
 const GENERIC_ACTIVATION_ERROR =
   "No pudimos validar esos datos. Revisá el teléfono y el código, o pedile una nueva invitación a tu entrenador.";
@@ -145,6 +165,34 @@ export async function activateAthlete(
 ): Promise<ActivationState> {
   const phone = normalizePhoneE164(formData.get("telefono"));
   const code = String(formData.get("codigo") ?? "").trim();
+  const secret = authSecret();
+  await cleanupAccessRateLimits(db);
+  const limiterKeys = [
+    {
+      scope: "athlete-activation-client",
+      keyHash: await athleteClientFingerprint(secret),
+      maxAttempts: 10,
+    },
+    {
+      scope: "athlete-activation-credential",
+      keyHash: fingerprintAccessKey(
+        "athlete-activation-credential",
+        phone ?? "invalid",
+        secret
+      ),
+      maxAttempts: 5,
+    },
+  ];
+  const limits = await Promise.all(
+    limiterKeys.map((key) =>
+      consumeAccessAttempt(db, key.scope, key.keyHash, {
+        maxAttempts: key.maxAttempts,
+      })
+    )
+  );
+  if (limits.some((limit) => limit.limited)) {
+    return { status: "error", message: GENERIC_ACTIVATION_ERROR };
+  }
   if (!phone || !/^\d{6}$/.test(code)) {
     return { status: "error", message: GENERIC_ACTIVATION_ERROR };
   }
@@ -175,7 +223,7 @@ export async function activateAthlete(
       challenge.id,
       phone,
       code,
-      authSecret()
+      secret
     )
   ) {
     await db
@@ -191,26 +239,63 @@ export async function activateAthlete(
     return { status: "error", message: GENERIC_ACTIVATION_ERROR };
   }
 
-  const consumed = await db
-    .update(athleteActivationChallenges)
-    .set({ consumedAt: now })
-    .where(
-      and(
-        eq(athleteActivationChallenges.id, challenge.id),
-        isNull(athleteActivationChallenges.consumedAt),
-        lt(athleteActivationChallenges.attempts, ACTIVATION_MAX_ATTEMPTS),
-        gt(athleteActivationChallenges.expiresAt, now)
-      )
-    )
-    .returning({ id: athleteActivationChallenges.id });
-  if (consumed.length !== 1) {
+  let issued: Awaited<ReturnType<typeof commitAthleteActivation>>;
+  try {
+    issued = await commitAthleteActivation(
+      db,
+      {
+        athleteId: athlete.id,
+        challengeId: challenge.id,
+        phone,
+        secret,
+        now,
+      }
+    );
+  } catch {
     return { status: "error", message: GENERIC_ACTIVATION_ERROR };
   }
+  await resetAccessAttempts(
+    db,
+    limiterKeys.map(({ scope, keyHash }) => ({ scope, keyHash }))
+  );
+  await establishAthleteAccess(athlete.id, issued.credentialVersion);
+  return {
+    status: "success",
+    message:
+      "Acceso activado. Guardá esta credencial ahora: no volveremos a mostrarla.",
+    accessToken: issued.token,
+  };
+}
 
-  await db
-    .update(athletes)
-    .set({ telefonoVerificadoAt: now })
-    .where(and(eq(athletes.id, athlete.id), eq(athletes.telefonoE164, phone)));
-  await establishAthleteAccess(athlete.id);
-  redirect(`/hoy/${athlete.accessPin}`);
+export async function rotateAthleteAccess(
+  athleteId: string,
+  _previousState: AthleteCredentialState
+): Promise<AthleteCredentialState> {
+  await requireCoachResource("athlete", athleteId);
+  const issued = await issueAthleteAccessToken(
+    db,
+    athleteId,
+    authSecret(),
+    new Date()
+  );
+  revalidatePath(`/atletas/${athleteId}`);
+  return {
+    status: "success",
+    message:
+      "Credencial rotada. Las sesiones anteriores quedaron invalidadas.",
+    accessToken: issued.token,
+  };
+}
+
+export async function revokeAthleteAccess(
+  athleteId: string,
+  _previousState: AthleteCredentialState
+): Promise<AthleteCredentialState> {
+  await requireCoachResource("athlete", athleteId);
+  await revokeAthleteAccessToken(db, athleteId);
+  revalidatePath(`/atletas/${athleteId}`);
+  return {
+    status: "success",
+    message: "Acceso revocado. Todas las sesiones del atleta quedaron invalidadas.",
+  };
 }

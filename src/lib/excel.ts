@@ -198,7 +198,6 @@ export const HEADERS_EXPORT = [
   "Peso corporal (kg)",
   "Altura (cm)",
   "Estado",
-  "PIN atleta",
   "Sentadilla (kg)",
   "Banca (kg)",
   "Peso muerto (kg)",
@@ -216,7 +215,6 @@ export type FilaExportAtleta = {
   pesoCorporal: string;
   altura: string;
   estado: string;
-  pin: string;
   sentadilla: string;
   banca: string;
   pesoMuerto: string;
@@ -235,7 +233,6 @@ export function buildPlantillaXlsx(): Buffer {
     62.4,
     165,
     "Activo",
-    "",
     110,
     62.5,
     135,
@@ -256,7 +253,7 @@ export function buildPlantillaXlsx(): Buffer {
     ["Opcionales: Categoría, Sexo, Peso corporal (kg), Altura (cm), Estado, Notas."],
     ["Marcas (opcionales, en kg): Sentadilla, Banca, Peso muerto."],
     ["Si solo cargás el nombre completo en 'Nombre', el apellido se separa automáticamente."],
-    ["El PIN se genera solo; los atletas ya existentes (mismo nombre y apellido) se omiten."],
+    ["Los atletas ya existentes (mismo nombre y apellido) se omiten."],
     ["Sexo: Masculino / Femenino (o M / F)."],
   ]);
   instrucciones["!cols"] = [{ wch: 95 }];
@@ -288,7 +285,6 @@ export function buildAtletasExportXlsx(
       a.pesoCorporal,
       a.altura,
       a.estado,
-      a.pin,
       a.sentadilla,
       a.banca,
       a.pesoMuerto,
